@@ -61,8 +61,8 @@ services:
     - alpine:3.12
   image: zabbix-web-nginx-pgsql:alpine-local
   ports:
-   - "8081:8080"
-   - "8443:8443"
+   - "80:8080"
+   - "443:8443"
   links:
    - postgres-server:postgres-server
    - zabbix-server:zabbix-server
@@ -171,13 +171,12 @@ services:
    com.zabbix.os: "alpine"
 
  postgres-server:
-  image: postgres:latest
-#  command: -c ssl=on -c ssl_cert_file=/run/secrets/server-cert.pem -c ssl_key_file=/run/secrets/server-key.pem -c ssl_ca_file=/run/secrets/root-ca.pem
+  build: ./postgres
+  container_name: postgres
+  hostname: postgres
+  restart: always
   volumes:
    - ./zbx_env/var/lib/postgresql/data:/var/lib/postgresql/data:rw
-   - ./.ZBX_DB_CA_FILE:/run/secrets/root-ca.pem:ro
-   - ./.ZBX_DB_CERT_FILE:/run/secrets/server-cert.pem:ro
-   - ./.ZBX_DB_KEY_FILE:/run/secrets/server-key.pem:ro
   env_file:
    - .env_db_pgsql
   secrets:
