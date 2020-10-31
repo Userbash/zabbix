@@ -116,7 +116,7 @@ services:
   links:
    - zabbix-server:zabbix-server
   networks:
-   zbx_net_backend:
+   zbx_net_frontend:
     aliases:
      - zabbix-agent
      - zabbix-agent-passive
@@ -170,6 +170,28 @@ services:
    com.zabbix.component: "snmptraps"
    com.zabbix.os: "alpine"
 
+ grafana-server:
+     build: ./grafana
+     container_name: grafana
+     hostname: grafana
+     restart: always
+     volumes:
+       - ./zbx_env/etc/grafana:/etc/grafana:rw
+       - ./zbx_env/etc/grafana/provisioning:/etc/grafana/provisioning:rw
+       - ./zbx_env/var/lib/grafana:/var/lib/grafana:rw
+       - ./zbx_env/var/lib/grafana/plugins:/var/lib/grafana/plugins:rw
+     env_file:
+      - .env_grafana
+     ports:
+       - "3000:3000"  
+     depends_on:
+        - postgres-server
+     networks:
+      zbx_net_backend:
+       aliases:
+        - grafana-server
+      zbx_net_frontend: 
+ 
  postgres-server:
   build: ./postgres
   container_name: postgres
