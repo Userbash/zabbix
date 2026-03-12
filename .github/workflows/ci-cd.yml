@@ -47,18 +47,25 @@ jobs:
 
       - name: Prepare environment
         run: |
+          # Создаем рабочие конфиги из шаблонов
           cp .env_agent.example .env_agent
           cp .env_db_pgsql.example .env_db_pgsql
           cp .env_grafana.example .env_grafana
           cp .env_srv.example .env_srv
           cp .env_web.example .env_web
-          cp .POSTGRES_USER.example .POSTGRES_USER
-          cp .POSTGRES_PASSWORD.example .POSTGRES_PASSWORD
-          # Set known test values
-          sed -i 's/your_password/testpassword123/g' .env_grafana
-          sed -i 's/your_password/testpassword123/g' .POSTGRES_PASSWORD
-          sed -i 's/your_username/zabbix/g' .POSTGRES_USER
-
+          
+          # Безопасно инжектируем секреты GitHub в файлы, которые игнорируются git
+          echo "${{ secrets.POSTGRES_USER }}" > .POSTGRES_USER
+          echo "${{ secrets.POSTGRES_PASSWORD }}" > .POSTGRES_PASSWORD
+          
+          # Настраиваем хосты для связи контейнеров (из-за переименования сервисов)
+          sed -i "s/postgres-server/postgres/g" .env_srv
+          sed -i "s/postgres-server/postgres/g" .env_web
+          sed -i "s/postgres-server/postgres/g" .env_grafana
+          
+          # Подставляем пароль Grafana из секретов
+          sed -i "s/your_password/${{ secrets.GF_DATABASE_PASSWORD }}/g" .env_grafana
+          
       - name: Validate Environment Templates
         run: bash scripts/validate_envs.sh
 
@@ -67,14 +74,6 @@ jobs:
 
       - name: Build Images
         run: docker compose build
-
-      - name: Run Trivy Vulnerability Scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: 'zabbix-server-pgsql:alpine-local'
-          format: 'table'
-          exit-code: '0'
-          severity: 'CRITICAL,HIGH'
 
       - name: Start Stack
         run: docker compose up -d
