@@ -30,8 +30,3 @@ This project is designed with security in mind. All passwords and sensitive data
     podman-compose up -d
     ```
 
-## 🛠️ GitHub Actions
-
-The provided GitHub Actions workflow (`.github/workflows/docker-publish.yml`) is configured to build images. For automated deployments:
-1.  Define sensitive values as **GitHub Secrets**.
-2.  Update the workflow to inject these secrets into the build process.
