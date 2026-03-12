@@ -7,70 +7,73 @@ ARG ZBX_SOURCES=https://git.zabbix.com/scm/zbx/zabbix.git
 
 ENV ZBX_VERSION=${ZBX_VERSION} ZBX_SOURCES=${ZBX_SOURCES}
 
-RUN set -eux && 
-    apk add --no-cache --virtual build-dependencies 
-            autoconf 
-            automake 
-            go 
-            g++ 
-            make 
-            git 
-            pcre-dev 
-            openssl-dev 
-            zlib-dev && 
-    cd /tmp/ && 
-    git clone ${ZBX_SOURCES} --branch ${ZBX_VERSION} --depth 1 --single-branch zabbix-${ZBX_VERSION} && 
-    cd /tmp/zabbix-${ZBX_VERSION} && 
-    zabbix_revision=`git rev-parse --short HEAD` && 
-    sed -i "s/{ZABBIX_REVISION}/$zabbix_revision/g" src/go/pkg/version/version.go && 
-    ./bootstrap.sh && 
-    export CFLAGS="-fPIC -pie -Wl,-z,relro -Wl,-z,now" && 
-    export GOPATH=/tmp/zabbix-${ZBX_VERSION}/go && 
-    ./configure 
-            --datadir=/usr/lib 
-            --libdir=/usr/lib/zabbix 
-            --prefix=/usr 
-            --sysconfdir=/etc/zabbix 
-            --prefix=/usr 
-            --with-openssl 
-            --enable-ipv6 
-            --enable-agent2 
-            --enable-agent 
-            --silent && 
-    make -j"$(nproc)" -s && 
+WORKDIR /tmp/
+
+RUN set -eux; \
+    apk add --no-cache --virtual build-dependencies \
+            autoconf \
+            automake \
+            go \
+            g++ \
+            make \
+            git \
+            pcre-dev \
+            openssl-dev \
+            zlib-dev && \
+    git clone "${ZBX_SOURCES}" --branch "${ZBX_VERSION}" --depth 1 --single-branch "zabbix-${ZBX_VERSION}"
+
+WORKDIR /tmp/zabbix-${ZBX_VERSION}
+
+RUN set -eux; \
+    zabbix_revision=$(git rev-parse --short HEAD) && \
+    sed -i "s/{ZABBIX_REVISION}/${zabbix_revision}/g" src/go/pkg/version/version.go && \
+    ./bootstrap.sh && \
+    export CFLAGS="-fPIC -pie -Wl,-z,relro -Wl,-z,now" && \
+    export GOPATH="/tmp/zabbix-${ZBX_VERSION}/go" && \
+    ./configure \
+            --datadir=/usr/lib \
+            --libdir=/usr/lib/zabbix \
+            --prefix=/usr \
+            --sysconfdir=/etc/zabbix \
+            --with-openssl \
+            --enable-ipv6 \
+            --enable-agent2 \
+            --enable-agent \
+            --silent && \
+    make -j"$(nproc)" -s && \
     make -j"$(nproc)" -s install
 
 # Final stage
 FROM alpine:3.19
 
-LABEL org.opencontainers.image.title="Zabbix agent 2" 
-      org.opencontainers.image.authors="Alexey Pustovalov <alexey.pustovalov@zabbix.com>" 
-      org.opencontainers.image.vendor="Zabbix LLC" 
-      org.opencontainers.image.url="https://zabbix.com/" 
-      org.opencontainers.image.description="Zabbix agent 2 is deployed on a monitoring target to actively monitor local resources and applications" 
+LABEL org.opencontainers.image.title="Zabbix agent 2" \
+      org.opencontainers.image.authors="Alexey Pustovalov <alexey.pustovalov@zabbix.com>" \
+      org.opencontainers.image.vendor="Zabbix LLC" \
+      org.opencontainers.image.url="https://zabbix.com/" \
+      org.opencontainers.image.description="Zabbix agent 2 is deployed on a monitoring target to actively monitor local resources and applications" \
       org.opencontainers.image.licenses="GPL v2.0"
 
 STOPSIGNAL SIGTERM
 
-RUN set -eux && 
-    addgroup -S -g 1995 zabbix && 
-    adduser -S 
-            -D -G zabbix -G root 
-            -u 1997 
-            -h /var/lib/zabbix/ 
-        zabbix && 
-    mkdir -p /etc/zabbix && 
-    mkdir -p /etc/zabbix/zabbix_agentd.d && 
-    mkdir -p /var/lib/zabbix && 
-    mkdir -p /var/lib/zabbix/enc && 
-    mkdir -p /var/lib/zabbix/modules && 
-    apk add --no-cache --clean-protected 
-            tini 
-            tzdata 
-            bash 
-            pcre 
-            coreutils 
-            iputils && 
+RUN set -eux; \
+    addgroup -S -g 1995 zabbix && \
+    adduser -S \
+            -D -G zabbix -G root \
+            -u 1997 \
+            -h /var/lib/zabbix/ \
+        zabbix && \
+    mkdir -p /etc/zabbix && \
+    mkdir -p /etc/zabbix/zabbix_agentd.d && \
+    mkdir -p /var/lib/zabbix && \
+    mkdir -p /var/lib/zabbix/enc && \
+    mkdir -p /var/lib/zabbix/modules && \
+    apk add --no-cache --clean-protected \
+            tini \
+            tzdata \
+            bash \
+            pcre \
+            coreutils \
+            iputils && \
     rm -rf /var/cache/apk/*
 
 ARG MAJOR_VERSION=5.0
@@ -79,8 +82,8 @@ ARG ZBX_SOURCES=https://git.zabbix.com/scm/zbx/zabbix.git
 
 ENV TERM=xterm ZBX_VERSION=${ZBX_VERSION} ZBX_SOURCES=${ZBX_SOURCES}
 
-LABEL org.opencontainers.image.documentation="https://www.zabbix.com/documentation/${MAJOR_VERSION}/manual/installation/containers" 
-      org.opencontainers.image.version="${ZBX_VERSION}" 
+LABEL org.opencontainers.image.documentation="https://www.zabbix.com/documentation/${MAJOR_VERSION}/manual/installation/containers" \
+      org.opencontainers.image.version="${ZBX_VERSION}" \
       org.opencontainers.image.source="${ZBX_SOURCES}"
 
 COPY --from=builder /usr/sbin/zabbix_agent2 /usr/sbin/zabbix_agent2
@@ -88,12 +91,12 @@ COPY --from=builder /usr/bin/zabbix_get /usr/bin/zabbix_get
 COPY --from=builder /usr/bin/zabbix_sender /usr/bin/zabbix_sender
 COPY --from=builder /etc/zabbix/zabbix_agent2.conf /etc/zabbix/zabbix_agent2.conf
 
-RUN set -eux && 
-    strip /usr/sbin/zabbix_agent2 && 
-    strip /usr/bin/zabbix_get && 
-    strip /usr/bin/zabbix_sender && 
-    chown --quiet -R zabbix:root /etc/zabbix/ /var/lib/zabbix/ && 
-    chgrp -R 0 /etc/zabbix/ /var/lib/zabbix/ && 
+RUN set -eux; \
+    strip /usr/sbin/zabbix_agent2 && \
+    strip /usr/bin/zabbix_get && \
+    strip /usr/bin/zabbix_sender && \
+    chown --quiet -R zabbix:root /etc/zabbix/ /var/lib/zabbix/ && \
+    chgrp -R 0 /etc/zabbix/ /var/lib/zabbix/ && \
     chmod -R g=u /etc/zabbix/ /var/lib/zabbix/
 
 EXPOSE 10050/TCP 31999/TCP

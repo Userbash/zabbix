@@ -1,1 +1,115 @@
-security-scanning-with-trivy-and-anchore-integrated-into-ci-to-scan-docker-images-and-base-layers-for-cves-and-fail-builds-on-high-or-critical-severity,static-code-and-configuration-linting-using-hadolint-for-dockerfiles-yamllint-for-docker-compose-and-yaml-configs-shellcheck-for-shell-scripts-and-jsonlint-for-json-configs-executed-at-pre-commit-and-ci-stages,git-history-and-repository-secret-detection-using-gitleaks-as-pre-commit-hook-and-ci-stage-with-baseline-verification-and-blocking-of-commits-containing-credentials-tokens-or-private-keys,environment-template-integrity-validation-script-that-compares-env-env-local-env-prod-files-with-env-example-to-detect-missing-or-extra-variables-and-enforces-schema-consistency,docker-compose-configuration-validation-using-compose-config-and-yaml-schema-check-to-prevent-invalid-service-definitions-or-networking-errors,dependency-security-auditing-with-npm-audit-composer-audit-pip-audit-and-osv-scanner-to-detect-vulnerable-libraries-and-enforce-updates-before-build-stage,container-build-reproducibility-validation-with-docker-buildkit-lockfiles-and-image-digest-verification-to-ensure-deterministic-builds,ci-pipeline-stage-commit-running-fast-linting-secret-detection-and-config-schema-validation-to-stop-errors-before-build,ci-pipeline-stage-build-building-containers-with-buildkit-and-running-trivy-image-scan-and-sbom-generation-for-supply-chain-visibility,ci-pipeline-stage-test-starting-stack-using-docker-compose-up-in-isolated-network-and-running-automated-service-healthchecks,service-startup-diagnostics-using-docker-healthcheck-directives-for-postgresql-zabbix-server-zabbix-web-and-grafana-with-retry-and-timeout-policies,connectivity-tests-executed-in-ci-using-pg_isready-curl-and-tcp-port-checks-to-validate-service-networking-and-database-availability,database-schema-validation-script-that-connects-to-postgresql-and-verifies-presence-of-required-zabbix-tables-indexes-and-permissions,automated-database-migration-and-integrity-checks-to-ensure-schema-version-matches-running-zabbix-server-version,zabbix-api-readiness-test-script-that-authenticates-against-api-verifies-server-status-confirms-default-host-zabbix-server-exists-and-checks-core-templates-loaded,grafana-datasource-health-validation-script-that-confirms-successful-connection-to-postgresql-and-executes-test-query-on-zabbix-database,automated-grafana-dashboard-provisioning-using-json-dashboards-stored-in-repository-and-loaded-through-grafana-provisioning-directory-on-startup,configuration-management-layer-using-ansible-or-terraform-to-enforce-idempotent-infrastructure-state-and-prevent-manual-drift,automated-user-and-permission-provisioning-via-zabbix-api-creating-standard-groups-readonly-admin-noc-and-assigning-roles-with-least-privilege-principle,secure-admin-account-provisioning-with-randomized-password-generation-rotation-policy-and-storage-in-secrets-manager,optional-ldap-or-active-directory-integration-automation-for-centralized-authentication-and-role-mapping,observability-and-monitoring-validation-stage-verifying-that-metrics-are-collected-alerts-trigger-and-dashboards-render-correctly,ci-post-deployment-diagnostics-running-smoke-tests-to-confirm-end-to-end-stack-functionality-zabbix-server-collects-data-grafana-visualizes-it-and-database-persists-metrics,artifact-security-verification-generating-sbom-and-signing-images-using-cosign-to-protect-supply-chain-integrity,rollback-and-recovery-strategy-defining-automated-container-rollback-and-database-backup-validation-to-improve-failure-recovery,continuous-improvement-loop-where-ci-reports-security-findings-performance-issues-and-configuration-drift-to-maintain-long-term-system-reliability-and-operational-stability
+
+Annotations
+14 errors and 7 warnings
+build (grafana)
+Process completed with exit code 1.
+build (zabbix-server-pgsql)
+The strategy configuration was canceled because "build.grafana" failed
+build (zabbix-agent)
+The strategy configuration was canceled because "build.grafana" failed
+build (zabbix-agent)
+Process completed with exit code 1.
+build (zabbix-snmptraps)
+The strategy configuration was canceled because "build.grafana" failed
+build (zabbix-snmptraps)
+Process completed with exit code 1.
+build (zabbix-agent2)
+The strategy configuration was canceled because "build.grafana" failed
+build (zabbix-agent2)
+Process completed with exit code 1.
+build (zabbix-java-gateway)
+The strategy configuration was canceled because "build.grafana" failed
+build (zabbix-java-gateway)
+Process completed with exit code 1.
+build (zabbix-web-nginx-pgsql)
+The strategy configuration was canceled because "build.grafana" failed
+build (zabbix-web-nginx-pgsql)
+Process completed with exit code 1.
+build (postgres)
+The strategy configuration was canceled because "build.grafana" failed
+build (postgres)
+The operation was canceled.
+build (grafana)
+Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/checkout@v3. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build (zabbix-agent)
+Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/checkout@v3. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build (zabbix-snmptraps)
+Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/checkout@v3. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build (zabbix-agent2)
+Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/checkout@v3. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build (zabbix-java-gateway)
+Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/checkout@v3. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build (zabbix-web-nginx-pgsql)
+Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/checkout@v3. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build (postgres)
+Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/checkout@v3. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+
+Skip to content
+
+    Userbash
+    zabbix
+
+Repository navigation
+
+    Code
+    Issues
+    Pull requests
+    Agents
+    Actions
+    Projects
+    Wiki
+    Security
+    Insights
+    Settings
+
+Zabbix Stack CI/CD
+fix: replace docker-compose with docker compose and ensure scripts ar… #2
+
+    All jobs
+    Run details
+
+Triggered via push now
+@UserbashUserbash
+pushed
+a82544d
+master
+Status Failure
+Total duration 18s
+Artifacts –
+Annotations
+10 errors and 1 warning
+Lint & Security Scan
+unexpected 'a' expecting '#', '\', ADD, ARG, CMD, COPY, ENTRYPOINT, ENV, EXPOSE, FROM, HEALTHCHECK, LABEL, MAINTAINER, ONBUILD, RUN, SHELL, STOPSIGNAL, USER, VOLUME, WORKDIR, a pragma, at least one space, or end of input
+Lint & Security Scan: postgres/Dockerfile#L24
+DL4006 warning: Set the SHELL option -o pipefail before RUN with a pipe in it. If you are using /bin/sh in an alpine image or if your shell is symlinked to busybox then consider explicitly setting your SHELL to /bin/ash, or disable this check
+Lint & Security Scan: postgres/Dockerfile#L24
+DL3047 info: Avoid use of wget without progress bar. Use `wget --progress=dot:giga <url>`. Or consider using `-q` or `-nv` (shorthands for `--quiet` or `--no-verbose`).
+Lint & Security Scan: postgres/Dockerfile#L24
+SC2086 info: Double quote to prevent globbing and word splitting.
+Lint & Security Scan: postgres/Dockerfile#L24
+DL3018 warning: Pin versions in apk add. Instead of `apk add <package>` use `apk add <package>=<version>`
+Lint & Security Scan: postgres/Dockerfile#L24
+DL3003 warning: Use WORKDIR to switch to a directory
+Lint & Security Scan
+unexpected 'a' expecting '#', '\', ADD, ARG, CMD, COPY, ENTRYPOINT, ENV, EXPOSE, FROM, HEALTHCHECK, LABEL, MAINTAINER, ONBUILD, RUN, SHELL, STOPSIGNAL, USER, VOLUME, WORKDIR, a pragma, at least one space, or end of input
+Lint & Security Scan
+unexpected 'G' expecting '#', '\', ADD, ARG, CMD, COPY, ENTRYPOINT, ENV, EXPOSE, FROM, HEALTHCHECK, LABEL, MAINTAINER, ONBUILD, RUN, SHELL, STOPSIGNAL, USER, VOLUME, WORKDIR, a pragma, at least one space, or end of input
+Lint & Security Scan
+unexpected 'a' expecting '#', '\', ADD, ARG, CMD, COPY, ENTRYPOINT, ENV, EXPOSE, FROM, HEALTHCHECK, LABEL, MAINTAINER, ONBUILD, RUN, SHELL, STOPSIGNAL, USER, VOLUME, WORKDIR, a pragma, at least one space, or end of input
+Lint & Security Scan
+unexpected 'a' expecting '#', '\', ADD, ARG, CMD, COPY, ENTRYPOINT, ENV, EXPOSE, FROM, HEALTHCHECK, LABEL, MAINTAINER, ONBUILD, RUN, SHELL, STOPSIGNAL, USER, VOLUME, WORKDIR, a pragma, at least one space, or end of input
+Lint & Security Scan
+Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/checkout@v3. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+Footer
+© 2026 GitHub, Inc.
+Footer navigation
+
+    Terms
+    Privacy
+    Security
+    Status
+    Community
+    Docs
+    Contact
+
+collectfullbuildlogsfromcleanenvironment,recordexactcompilererrorswarningsandexitcodes,freezecommitanddependencyversions,reproducefailurelocallyandincleanci,grouperrorsbytypecompilationlinkingtestsconfigdependenciesgeneratedcode,sorterrorsbyfirstrootcauseandbuildblockingimpact,identifythefirstfailingfileandfirstrealerrorbeforecascade,traceeacherrortoexactfilelineandchangehistory,comparefailingbranchagainstlastknowngreenbuild,reviewrecentchangesinbuildscriptsconfigsdependenciesandgeneratedartifacts,verifytoolchainversionscompilerruntimepackageManagerandsdkMatchprojectrequirements,clearcacheslockfilesandstaleartifactsonlywhenneeded,restoredependenciesfromlockfileandverifydeterministicinstall,detectmissingpackagesbrokenimportsinvalidpathsandcaseSensitivityissues,fixsyntaxerrorstypeerrorsnullabilityissuesandsignaturemismatches,fixincorrectexportsimportsnamespaceusageandcirculardependencies,fixmoduleResolutionaliasesenvironmentVariablesandpathMappings,fixbrokenbuildconfigurationinwebpackvitebabeltsconfigeslintgradlemavencmakeorotherprojecttools,fixversionConflictspeerDependencyConflictsandduplicatePackages,replacedeprecatedapiswithsupportedstableapis,regeneratecodeSchemasclientsassetsandbuildArtifactswhenrequired,fixincorrectfeatureFlagsplatformGuardsandconditionalCompilation,fixfailingtestsblockingbuildonlyaftercorecompileissuesareresolved,updateorcreatemocksfixturesandtestDataforchangedinterfaces,removedeadcodeunreachablebranchesandobsoleteconfigentriescausingconflicts,standardizeerrorHandlingloggingandfallbackswherebuildstepsdependonruntimechecks,addinputvalidationforconfigfilesenvvarsandgeneratedvalues,checkencodinglineEndingsfilePermissionsandexecutableBitsforbuildscripts,validatedockerfileciworkflowandpipelineStepsmatchlocalbuildprocess,runlint,typecheck,unitTests,integrationTests,andfullproductionBuildaftereachfixBatch,stopaftereachresolvedrootCauseandrecheckremainingerrorsbecausecascadesmaydisappear,documenteveryfixwithreasonaffectedfilesandverificationResult,addguardrailswithstrictertypinglintRulesandciChecks topreventrecurrence,addmissingtestscoveringthefixedfailurepathsandbuildregressions,verifycrossPlatformbuildsonalltargetedosesandarchitecturesifapplicable,verifydebugandreleaseprofilesbothbuildsuccessfully,verifycleanclonebuildswithoutmanualstepsorhiddenlocalstate,verifygeneratedartifactsareeithercommittedorcorrectlygeneratedincibeforebuild,reviewsecurityandperformanceimpactofeachchangebeforefinalizing,performfinalzerowarningpasswherepracticalandeliminateallnonactionablenoise,runfullregressionsuiteuntilnoerrorsremain,preparefinalchangeSummarywithrootCausesfixesverificationandpreventionSteps,ensureprojectbuildsfromscratchwithzeroerrorsandstableciStatus
