@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi8/ubi
+FROM registry.access.redhat.com/ubi8/ubi:8.10
 MAINTAINER Alexey Pustovalov <alexey.pustovalov@zabbix.com>
 
 ARG MAJOR_VERSION=5.0
@@ -41,6 +41,8 @@ STOPSIGNAL SIGTERM
 COPY ["conf/etc/yum.repo.d/nginx.repo", "/etc/yum.repos.d/nginx.repo"]
 COPY ["licenses", "/licenses"]
 
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 RUN set -o xtrace; INSTALL_PKGS="OpenIPMI-libs \
             tzdata \
             curl \
@@ -72,8 +74,8 @@ RUN set -o xtrace; INSTALL_PKGS="OpenIPMI-libs \
     dnf -y update-minimal --disablerepo "*" --enablerepo ubi-8-baseos --setopt=tsflags=nodocs \
         --security --sec-severity=Important --sec-severity=Critical && \
     dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm && \
-    dnf -y install --disablerepo "*" --enablerepo "${REPOLIST}" --setopt=install_weak_deps=False --best \
-        --setopt=tsflags=nodocs ${INSTALL_PKGS} && \
+    echo "${INSTALL_PKGS}" | xargs dnf -y install --disablerepo "*" --enablerepo "${REPOLIST}" --setopt=install_weak_deps=False --best \
+        --setopt=tsflags=nodocs && \
     pip3 install --no-cache-dir supervisor && \
     ln -s /usr/local/bin/supervisord /usr/bin/supervisord && \
     groupadd -g 1995 --system zabbix && \
@@ -101,8 +103,8 @@ RUN set -o xtrace; INSTALL_PKGS="OpenIPMI-libs \
     mkdir -p /usr/sbin/zabbix_java/ext_lib/ && \
     mkdir -p /var/lib/php/ && \
     mkdir -p /usr/share/doc/zabbix-server-mysql/ && \
-    curl -L "https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini" -o /sbin/tini && \
-    curl -L "https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini.asc" -o /tmp/tini.asc && \
+    curl -sSL "https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini" -o /sbin/tini && \
+    curl -sSL "https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini.asc" -o /tmp/tini.asc && \
     export GNUPGHOME="$(mktemp -d)" && \
     for server in $(shuf -e ha.pool.sks-keyservers.net \
                             hkp://p80.pool.sks-keyservers.net:80 \
@@ -122,6 +124,8 @@ RUN set -o xtrace; INSTALL_PKGS="OpenIPMI-libs \
 
 COPY ["conf/etc/", "/etc/"]
 
+WORKDIR /tmp/zabbix
+
 RUN set -eux; REPOLIST="rhel-8-for-x86_64-baseos-rpms,rhel-8-for-x86_64-appstream-rpms" && \
     INSTALL_PKGS="autoconf \
             automake \
@@ -140,13 +144,10 @@ RUN set -eux; REPOLIST="rhel-8-for-x86_64-baseos-rpms,rhel-8-for-x86_64-appstrea
             openldap-devel \
             git \
             unixODBC-devel" && \
-    dnf -y install --disablerepo "*" --enablerepo "${REPOLIST}" --setopt=install_weak_deps=False --best \
-        --setopt=tsflags=nodocs ${INSTALL_PKGS} && \
-    cd /tmp/ && \
-    git clone "${ZBX_SOURCES}" --branch "${ZBX_VERSION}" --depth 1 --single-branch "zabbix-${ZBX_VERSION}" && \
-    cd "/tmp/zabbix-${ZBX_VERSION}" && \
+    echo "${INSTALL_PKGS}" | xargs dnf -y install --disablerepo "*" --enablerepo "${REPOLIST}" --setopt=install_weak_deps=False --best \
+        --setopt=tsflags=nodocs && \
+    git clone "${ZBX_SOURCES}" --branch "${ZBX_VERSION}" --depth 1 --single-branch "zabbix-${ZBX_VERSION}" . && \
     zabbix_revision=$(git rev-parse --short HEAD) && \
-    sed -i "s/{ZABBIX_REVISION}/${zabbix_revision}/g" include/version.h && \
     sed -i "s/{ZABBIX_REVISION}/${zabbix_revision}/g" include/version.h && \
     sed -i "s/{ZABBIX_REVISION}/${zabbix_revision}/g" src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java && \
     ./bootstrap.sh && \
@@ -183,12 +184,12 @@ RUN set -eux; REPOLIST="rhel-8-for-x86_64-baseos-rpms,rhel-8-for-x86_64-appstrea
     cp -r src/zabbix_java/bin /usr/sbin/zabbix_java/ && \
     cp -r src/zabbix_java/lib /usr/sbin/zabbix_java/ && \
     rm -rf /usr/sbin/zabbix_java/lib/*.xml && \
-    cp -R "/tmp/zabbix-${ZBX_VERSION}/ui/"* /usr/share/zabbix/ && \
-    rm -rf "/tmp/zabbix-${ZBX_VERSION}/" && \
-    rm -f /usr/share/zabbix/conf/zabbix.conf.php && \
-    rm -f /usr/share/zabbix/conf/maintenance.inc.php && \
-    rm -rf /usr/share/zabbix/tests/ && \
-    cd /usr/share/zabbix/ && \
+    cp -R "ui/"* /usr/share/zabbix/ && \
+    rm -rf /tmp/zabbix
+
+WORKDIR /usr/share/zabbix
+
+RUN set -eux; \
     ./locale/make_mo.sh && \
     ln -s "/etc/zabbix/web/zabbix.conf.php" "/usr/share/zabbix/conf/zabbix.conf.php" && \
     ln -s "/etc/zabbix/web/maintenance.inc.php" "/usr/share/zabbix/conf/maintenance.inc.php" && \

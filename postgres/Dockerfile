@@ -1,6 +1,8 @@
 # vim:set ft=dockerfile:
 FROM alpine:3.19
 
+SHELL ["/bin/sh", "-o", "pipefail", "-c"]
+
 # 70 is the standard uid/gid for "postgres" in Alpine
 # https://git.alpinelinux.org/aports/tree/main/postgresql/postgresql.pre-install?h=3.12-stable
 RUN set -eux; \
@@ -31,7 +33,11 @@ RUN set -eux; \
 		--directory /usr/src/postgresql \
 		--strip-components 1 \
 	; \
-	rm postgresql.tar.bz2; \
+	rm postgresql.tar.bz2
+
+WORKDIR /usr/src/postgresql
+
+RUN set -eux; \
 	apk add --no-cache --virtual .build-deps \
 		bison \
 		coreutils \
@@ -52,7 +58,6 @@ RUN set -eux; \
 		zlib-dev \
 		icu-dev \
 	; \
-	cd /usr/src/postgresql; \
 	awk '$1 == "#define" && $2 == "DEFAULT_PGSOCKET_DIR" && $3 == "\"/tmp\"" { $3 = "\"/var/run/postgresql\""; print; next } { print }' src/include/pg_config_manual.h > src/include/pg_config_manual.h.new; \
 	grep '/var/run/postgresql' src/include/pg_config_manual.h.new; \
 	mv src/include/pg_config_manual.h.new src/include/pg_config_manual.h; \
@@ -87,14 +92,12 @@ RUN set -eux; \
 			| sort -u \
 			| awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
 	)"; \
-	apk add --no-cache --virtual .postgresql-rundeps \
-		$runDeps \
+	echo "$runDeps" | xargs apk add --no-cache --virtual .postgresql-rundeps \
 		bash \
 		su-exec \
 		tzdata \
 	; \
 	apk del --no-network .build-deps; \
-	cd /; \
 	rm -rf \
 		/usr/src/postgresql \
 		/usr/local/share/doc \
@@ -102,6 +105,8 @@ RUN set -eux; \
 	; \
 	find /usr/local -name '*.a' -delete; \
 	postgres --version
+
+WORKDIR /
 
 # make the sample config easier to munge (and "correct by default")
 RUN sed -ri "s!^#?(listen_addresses)\s*=\s*\S+.*!\1 = '*'!" /usr/local/share/postgresql/postgresql.conf.sample
@@ -119,4 +124,3 @@ ENTRYPOINT ["docker-entrypoint.sh"]
 
 EXPOSE 5432
 CMD ["postgres"]
-
