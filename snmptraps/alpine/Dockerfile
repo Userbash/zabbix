@@ -1,6 +1,35 @@
 # Compilation stage
 FROM alpine:3.19 as builder
 
+SHELL ["/bin/sh", "-o", "pipefail", "-c"]
+
+COPY ["snmptrapfmt_1.14+nmu1ubuntu2.tar.gz", "/tmp/"]
+...
+    cp snmptrapfmt.conf /etc/snmp/snmptrapfmt.conf
+
+# Final stage
+FROM alpine:3.19
+
+SHELL ["/bin/sh", "-o", "pipefail", "-c"]
+
+ARG MAJOR_VERSION=5.0
+...
+    addgroup -S -g 1995 zabbix && \
+    adduser -S \
+            -D -G zabbix -G root \
+            -u 1997 \
+            -h /var/lib/zabbix/ \
+        zabbix && \
+    apk add --no-cache \
+            tzdata \
+            net-snmp \
+            supervisor && \
+    mkdir -p /var/lib/zabbix && \
+... User modified the `new_string` content to be: # Compilation stage
+FROM alpine:3.19 as builder
+
+SHELL ["/bin/sh", "-o", "pipefail", "-c"]
+
 COPY ["snmptrapfmt_1.14+nmu1ubuntu2.tar.gz", "/tmp/"]
 
 WORKDIR /tmp/
@@ -28,6 +57,8 @@ RUN set -eux; \
 # Final stage
 FROM alpine:3.19
 
+SHELL ["/bin/sh", "-o", "pipefail", "-c"]
+
 ARG MAJOR_VERSION=5.0
 ARG ZBX_VERSION=${MAJOR_VERSION}.4
 ARG ZBX_SOURCES=https://git.zabbix.com/scm/zbx/zabbix.git
@@ -54,7 +85,7 @@ RUN set -eux; \
             -u 1997 \
             -h /var/lib/zabbix/ \
         zabbix && \
-    apk add --clean-protected --no-cache \
+    apk add --no-cache \
             tzdata \
             net-snmp \
             supervisor && \

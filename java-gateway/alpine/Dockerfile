@@ -1,6 +1,33 @@
 # Compilation stage
 FROM alpine:3.19 as builder
 
+SHELL ["/bin/sh", "-o", "pipefail", "-c"]
+
+ARG MAJOR_VERSION=5.0
+...
+    rm -rf /usr/sbin/zabbix_java/lib/*.xml
+
+# Final stage
+FROM alpine:3.19
+
+SHELL ["/bin/sh", "-o", "pipefail", "-c"]
+
+LABEL org.opencontainers.image.title="Zabbix Java Gateway" \
+...
+    mkdir -p /etc/zabbix/ && \
+    mkdir -p /usr/sbin/zabbix_java/ && \
+    mkdir -p /usr/sbin/zabbix_java/ext_lib/ && \
+    apk add --no-cache \
+            bash \
+            openjdk8-jre-base && \
+    rm -rf /var/cache/apk/*
+
+ARG MAJOR_VERSION=5.0
+... User modified the `new_string` content to be: # Compilation stage
+FROM alpine:3.19 as builder
+
+SHELL ["/bin/sh", "-o", "pipefail", "-c"]
+
 ARG MAJOR_VERSION=5.0
 ARG ZBX_VERSION=${MAJOR_VERSION}.4
 ARG ZBX_SOURCES=https://git.zabbix.com/scm/zbx/zabbix.git
@@ -44,6 +71,8 @@ RUN set -eux; \
 # Final stage
 FROM alpine:3.19
 
+SHELL ["/bin/sh", "-o", "pipefail", "-c"]
+
 LABEL org.opencontainers.image.title="Zabbix Java Gateway" \
       org.opencontainers.image.authors="Alexey Pustovalov <alexey.pustovalov@zabbix.com>" \
       org.opencontainers.image.vendor="Zabbix LLC" \
@@ -63,7 +92,7 @@ RUN set -eux; \
     mkdir -p /etc/zabbix/ && \
     mkdir -p /usr/sbin/zabbix_java/ && \
     mkdir -p /usr/sbin/zabbix_java/ext_lib/ && \
-    apk add --clean-protected --no-cache \
+    apk add --no-cache \
             bash \
             openjdk8-jre-base && \
     rm -rf /var/cache/apk/*

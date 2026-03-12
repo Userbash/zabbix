@@ -1,6 +1,8 @@
 # Compilation stage
 FROM alpine:3.19 as builder
 
+SHELL ["/bin/sh", "-o", "pipefail", "-c"]
+
 ARG MAJOR_VERSION=5.0
 ARG ZBX_VERSION=${MAJOR_VERSION}.4
 ARG ZBX_SOURCES=https://git.zabbix.com/scm/zbx/zabbix.git
@@ -30,6 +32,8 @@ RUN set -eux; \
 # Final stage
 FROM alpine:3.19
 
+SHELL ["/bin/sh", "-o", "pipefail", "-c"]
+
 LABEL org.opencontainers.image.title="Zabbix web-interface (Nginx, PostgreSQL)" \
       org.opencontainers.image.authors="Alexey Pustovalov <alexey.pustovalov@zabbix.com>" \
       org.opencontainers.image.vendor="Zabbix LLC" \
@@ -51,7 +55,7 @@ RUN set -eux; \
     mkdir -p /etc/zabbix/web && \
     mkdir -p /etc/zabbix/web/certs && \
     mkdir -p /var/lib/php/session && \
-    apk add --clean-protected --no-cache \
+    apk add --no-cache \
             bash \
             curl \
             nginx \

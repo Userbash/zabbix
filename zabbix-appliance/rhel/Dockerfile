@@ -1,4 +1,5 @@
 FROM registry.access.redhat.com/ubi8/ubi:8.10
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 MAINTAINER Alexey Pustovalov <alexey.pustovalov@zabbix.com>
 
 ARG MAJOR_VERSION=5.0
@@ -40,8 +41,6 @@ STOPSIGNAL SIGTERM
 
 COPY ["conf/etc/yum.repo.d/nginx.repo", "/etc/yum.repos.d/nginx.repo"]
 COPY ["licenses", "/licenses"]
-
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 RUN set -o xtrace; INSTALL_PKGS="OpenIPMI-libs \
             tzdata \

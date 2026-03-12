@@ -1,6 +1,8 @@
 # Compilation stage
 FROM alpine:3.19 as builder
 
+SHELL ["/bin/sh", "-o", "pipefail", "-c"]
+
 ARG MAJOR_VERSION=5.0
 ARG ZBX_VERSION=${MAJOR_VERSION}.4
 ARG ZBX_SOURCES=https://git.zabbix.com/scm/zbx/zabbix.git
@@ -46,6 +48,8 @@ RUN set -eux; \
 # Final stage
 FROM alpine:3.19
 
+SHELL ["/bin/sh", "-o", "pipefail", "-c"]
+
 LABEL org.opencontainers.image.title="Zabbix agent 2" \
       org.opencontainers.image.authors="Alexey Pustovalov <alexey.pustovalov@zabbix.com>" \
       org.opencontainers.image.vendor="Zabbix LLC" \
@@ -67,7 +71,7 @@ RUN set -eux; \
     mkdir -p /var/lib/zabbix && \
     mkdir -p /var/lib/zabbix/enc && \
     mkdir -p /var/lib/zabbix/modules && \
-    apk add --no-cache --clean-protected \
+    apk add --no-cache \
             tini \
             tzdata \
             bash \

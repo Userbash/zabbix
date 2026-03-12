@@ -1,6 +1,8 @@
 # Compilation stage
 FROM alpine:3.19 as builder
 
+SHELL ["/bin/sh", "-o", "pipefail", "-c"]
+
 ARG MAJOR_VERSION=5.0
 ARG ZBX_VERSION=${MAJOR_VERSION}.4
 ARG ZBX_SOURCES=https://git.zabbix.com/scm/zbx/zabbix.git
@@ -59,15 +61,14 @@ RUN set -eux; \
     make -j"$(nproc)" -s && \
     make -j"$(nproc)" -s install && \
     mkdir -p /usr/share/doc/zabbix-server-postgresql/ && \
-    cat database/postgresql/schema.sql > database/postgresql/create.sql && \
-    cat database/postgresql/images.sql >> database/postgresql/create.sql && \
-    cat database/postgresql/data.sql >> database/postgresql/create.sql && \
-    gzip database/postgresql/create.sql && \
-    cp database/postgresql/create.sql.gz /usr/share/doc/zabbix-server-postgresql/create.sql.gz && \
+    gzip -c database/postgresql/schema.sql > /usr/share/doc/zabbix-server-postgresql/create.sql.gz && \
+    cat database/postgresql/images.sql database/postgresql/data.sql | gzip -c >> /usr/share/doc/zabbix-server-postgresql/create.sql.gz && \
     cp database/postgresql/timescaledb.sql /usr/share/doc/zabbix-server-postgresql/timescaledb.sql
 
 # Final stage
 FROM alpine:3.19
+
+SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 
 LABEL org.opencontainers.image.title="Zabbix server (PostgreSQL)" \
       org.opencontainers.image.authors="Alexey Pustovalov <alexey.pustovalov@zabbix.com>" \
@@ -100,7 +101,7 @@ RUN set -eux; \
     mkdir -p /usr/lib/zabbix/alertscripts && \
     mkdir -p /usr/lib/zabbix/externalscripts && \
     mkdir -p /usr/share/doc/zabbix-server-postgresql && \
-    apk add --clean-protected --no-cache \
+    apk add --no-cache \
             tini \
             bash \
             fping \
