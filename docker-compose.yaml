@@ -40,7 +40,12 @@ services:
       - zabbix-server-alpine-pgsql
       - zabbix-server-pgsql-alpine
    zbx_net_frontend:
-
+  healthcheck:
+    test: ["CMD", "nc", "-z", "localhost", "10051"]
+    interval: 10s
+    timeout: 5s
+    retries: 5
+    start_period: 30s
   stop_grace_period: 30s
   sysctls:
    - net.ipv4.ip_local_port_range=1024 65000
@@ -87,6 +92,12 @@ services:
      - zabbix-web-nginx-alpine-pgsql
      - zabbix-web-nginx-pgsql-alpine
    zbx_net_frontend:
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+    interval: 10s
+    timeout: 5s
+    retries: 5
+    start_period: 30s
   stop_grace_period: 10s
   sysctls:
    - net.core.somaxconn=65535
@@ -191,6 +202,12 @@ services:
        aliases:
         - grafana-server
       zbx_net_frontend: 
+     healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
  
  postgres-server:
   build: ./postgres
@@ -204,6 +221,11 @@ services:
   secrets:
    - POSTGRES_USER
    - POSTGRES_PASSWORD
+  healthcheck:
+    test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
+    interval: 10s
+    timeout: 5s
+    retries: 5
   stop_grace_period: 1m
   networks:
    zbx_net_backend:

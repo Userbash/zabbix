@@ -2,3 +2,6 @@ zbx_env/
 zbx_env*/
 config/
 config*/
+.env*
+.POSTGRES*
+!*.example

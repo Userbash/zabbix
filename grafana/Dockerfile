@@ -1,38 +1,37 @@
-FROM debian:stretch-slim
+FROM debian:bullseye-slim
 
-ARG GRAFANA_URL="https://dl.grafana.com/oss/release/grafana-7.3.0.linux-amd64.tar.gz"
+ARG GRAFANA_URL="https://dl.grafana.com/oss/release/grafana-9.5.1.linux-amd64.tar.gz"
 ARG GF_UID="472"
 ARG GF_GID="472"
 
-ENV PATH=/usr/share/grafana/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
-    GF_PATHS_CONFIG="/etc/grafana/grafana.ini" \
-    GF_PATHS_DATA="/var/lib/grafana" \
-    GF_PATHS_HOME="/usr/share/grafana" \
-    GF_PATHS_LOGS="/var/log/grafana" \
-    GF_PATHS_PLUGINS="/var/lib/grafana/plugins" \
+ENV PATH=/usr/share/grafana/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin 
+    GF_PATHS_CONFIG="/etc/grafana/grafana.ini" 
+    GF_PATHS_DATA="/var/lib/grafana" 
+    GF_PATHS_HOME="/usr/share/grafana" 
+    GF_PATHS_LOGS="/var/log/grafana" 
+    GF_PATHS_PLUGINS="/var/lib/grafana/plugins" 
     GF_PATHS_PROVISIONING="/etc/grafana/provisioning"
 
-RUN apt-get update && apt-get install -qq -y tar libfontconfig curl ca-certificates && \
-    mkdir -p "$GF_PATHS_HOME/.aws" && \
-    curl "$GRAFANA_URL" | tar xfvz - --strip-components=1 -C "$GF_PATHS_HOME" && \
-    apt-get autoremove -y && \
-    rm -rf /var/lib/apt/lists/* && \
-    groupadd -r -g $GF_GID grafana && \
-    useradd -r -u $GF_UID -g grafana grafana && \
-    mkdir -p "$GF_PATHS_PROVISIONING/datasources" \
-             "$GF_PATHS_PROVISIONING/dashboards" \
-             "$GF_PATHS_LOGS" \
-             "$GF_PATHS_PLUGINS" \
-             "$GF_PATHS_DATA" && \
-    cp "$GF_PATHS_HOME/conf/sample.ini" "$GF_PATHS_CONFIG" && \
-    cp "$GF_PATHS_HOME/conf/ldap.toml" /etc/grafana/ldap.toml && \
-    chown -R grafana:grafana "$GF_PATHS_DATA" "$GF_PATHS_HOME/.aws" "$GF_PATHS_LOGS" "$GF_PATHS_PLUGINS" && \
-    chmod 777 "$GF_PATHS_DATA" "$GF_PATHS_HOME/.aws" "$GF_PATHS_LOGS" "$GF_PATHS_PLUGINS"
+RUN apt-get update && apt-get install -qq -y tar libfontconfig1 curl ca-certificates && 
+    mkdir -p "$GF_PATHS_HOME/.aws" && 
+    curl -L "$GRAFANA_URL" | tar xfvz - --strip-components=1 -C "$GF_PATHS_HOME" && 
+    apt-get autoremove -y && 
+    rm -rf /var/lib/apt/lists/* && 
+    groupadd -r -g $GF_GID grafana && 
+    useradd -r -u $GF_UID -g grafana grafana && 
+    mkdir -p "$GF_PATHS_PROVISIONING/datasources" 
+             "$GF_PATHS_PROVISIONING/dashboards" 
+             "$GF_PATHS_LOGS" 
+             "$GF_PATHS_PLUGINS" 
+             "$GF_PATHS_DATA" && 
+    cp "$GF_PATHS_HOME/conf/sample.ini" "$GF_PATHS_CONFIG" && 
+    cp "$GF_PATHS_HOME/conf/ldap.toml" /etc/grafana/ldap.toml && 
+    chown -R grafana:grafana "$GF_PATHS_DATA" "$GF_PATHS_HOME/.aws" "$GF_PATHS_LOGS" "$GF_PATHS_PLUGINS" && 
+    chmod 777 "$GF_PATHS_DATA" "$GF_PATHS_HOME/.aws" "$GF_PATHS_LOGS" "$GF_PATHS_PLUGINS" && 
+    chown -R grafana:grafana /var/lib/grafana/plugins && 
+    grafana-cli --pluginsDir "/var/lib/grafana/plugins" plugins install alexanderzobnin-zabbix-app && 
+    grafana-cli --pluginsDir "/var/lib/grafana/plugins" plugins update alexanderzobnin-zabbix-app
 
-RUN chown -R grafana:grafana /var/lib/grafana/plugins
-RUN grafana-cli --pluginsDir "/var/lib/grafana/plugins" plugins install alexanderzobnin-zabbix-app \
-    && grafana-cli --pluginsDir "/var/lib/grafana/plugins" plugins install alexanderzobnin-zabbix-app
- 
 EXPOSE 3000
 
 COPY ./run.sh /run.sh
