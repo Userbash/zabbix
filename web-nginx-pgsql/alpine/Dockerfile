@@ -1,5 +1,5 @@
 # Compilation stage
-FROM alpine:3.19 as builder
+FROM alpine:3.18 as builder
 
 SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 
@@ -13,12 +13,13 @@ WORKDIR /usr/share/
 
 RUN set -eux; \
     apk add --no-cache --virtual build-dependencies \
+            bash \
             coreutils \
             gettext \
             git && \
     git clone "${ZBX_SOURCES}" --branch "${ZBX_VERSION}" --depth 1 --single-branch "zabbix-${ZBX_VERSION}" && \
     mkdir /usr/share/zabbix/ && \
-    cp -R "/usr/share/zabbix-${ZBX_VERSION}/ui/"* /usr/share/zabbix/ && \
+    cp -R "/usr/share/zabbix-${ZBX_VERSION}/ui/." /usr/share/zabbix/ && \
     rm -rf "/usr/share/zabbix-${ZBX_VERSION}/"
 
 WORKDIR /usr/share/zabbix/
@@ -30,7 +31,7 @@ RUN set -eux; \
     ./locale/make_mo.sh
 
 # Final stage
-FROM alpine:3.19
+FROM alpine:3.18
 
 SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 
@@ -55,30 +56,33 @@ RUN set -eux; \
     mkdir -p /etc/zabbix/web && \
     mkdir -p /etc/zabbix/web/certs && \
     mkdir -p /var/lib/php/session && \
+    mkdir -p /var/log/php81 && \
     apk add --no-cache \
             bash \
             curl \
             nginx \
-            php-bcmath \
-            php-ctype \
-            php-fpm \
-            php-gd \
-            php-gettext \
-            php-json \
-            php-ldap \
-            php-mbstring \
-            php-pgsql \
-            php-session \
-            php-simplexml \
-            php-sockets \
-            php-fileinfo \
-            php-xmlreader \
-            php-xmlwriter \
-            php-openssl \
+            php81 \
+            php81-bcmath \
+            php81-ctype \
+            php81-fpm \
+            php81-gd \
+            php81-gettext \
+            php81-json \
+            php81-ldap \
+            php81-mbstring \
+            php81-pgsql \
+            php81-session \
+            php81-simplexml \
+            php81-sockets \
+            php81-fileinfo \
+            php81-xmlreader \
+            php81-xmlwriter \
+            php81-openssl \
             postgresql-client \
             supervisor && \
-    rm -rf /etc/php/8.2/php-fpm.d/www.conf && \
+    rm -rf /etc/php81/php-fpm.d/www.conf && \
     rm -f /etc/nginx/conf.d/*.conf && \
+    mkdir -p /etc/nginx/conf.d && \
     ln -sf /dev/fd/2 /var/log/nginx/error.log && \
     ln -sf /dev/fd/1 /var/log/nginx/access.log && \
     rm -rf /var/cache/apk/*
@@ -93,7 +97,20 @@ LABEL org.opencontainers.image.documentation="https://www.zabbix.com/documentati
       org.opencontainers.image.version="${ZBX_VERSION}" \
       org.opencontainers.image.source="${ZBX_SOURCES}"
 
-COPY ["conf/etc/", "/etc/"]
+# Copy configurations individually
+COPY conf/etc/nginx/nginx.conf /etc/nginx/nginx.conf
+COPY conf/etc/php7/php-fpm.conf /etc/php81/php-fpm.conf
+COPY conf/etc/php7/php-fpm.d/zabbix.conf /etc/php81/php-fpm.d/zabbix.conf
+COPY conf/etc/supervisor/supervisord.conf /etc/supervisor/supervisord.conf
+COPY conf/etc/supervisor/conf.d/supervisord_zabbix.conf /etc/supervisor/conf.d/supervisord_zabbix.conf
+COPY conf/etc/zabbix/nginx.conf /etc/nginx/conf.d/zabbix.conf
+COPY conf/etc/zabbix/nginx_ssl.conf /etc/nginx/conf.d/zabbix_ssl.conf
+COPY conf/etc/zabbix/web/maintenance.inc.php /etc/zabbix/web/maintenance.inc.php
+COPY conf/etc/zabbix/web/zabbix.conf.php /etc/zabbix/web/zabbix.conf.php
+
+RUN set -eux; \
+    find /etc/php81 -type f -exec sed -i 's/\/etc\/php7/\/etc\/php81/g' {} +
+
 COPY --from=builder /usr/share/zabbix/ /usr/share/zabbix/
 
 RUN set -eux; \
@@ -102,12 +119,12 @@ RUN set -eux; \
     chown --quiet -R zabbix:root /etc/zabbix/ /usr/share/zabbix/modules/ && \
     chgrp -R 0 /etc/zabbix/ /usr/share/zabbix/modules/ && \
     chmod -R g=u /etc/zabbix/ /usr/share/zabbix/modules/ && \
-    chown --quiet -R zabbix:root /etc/nginx/ /etc/php/8.2/php-fpm.d/ /etc/php/8.2/php-fpm.conf && \
-    chgrp -R 0 /etc/nginx/ /etc/php/8.2/php-fpm.d/ /etc/php/8.2/php-fpm.conf && \
-    chmod -R g=u /etc/nginx/ /etc/php/8.2/php-fpm.d/ /etc/php/8.2/php-fpm.conf && \
-    chown --quiet -R zabbix:root /var/lib/php/session/ /var/log/nginx/ && \
-    chgrp -R 0 /var/lib/php/session/ /var/log/nginx/ && \
-    chmod -R g=u /var/lib/php/session/ /var/log/nginx/ && \
+    chown --quiet -R zabbix:root /etc/nginx/ /etc/php81/php-fpm.d/ /etc/php81/php-fpm.conf && \
+    chgrp -R 0 /etc/nginx/ /etc/php81/php-fpm.d/ /etc/php81/php-fpm.conf && \
+    chmod -R g=u /etc/nginx/ /etc/php81/php-fpm.d/ /etc/php81/php-fpm.conf && \
+    chown --quiet -R zabbix:root /var/lib/php/session/ /var/log/nginx/ /var/log/php81/ && \
+    chgrp -R 0 /var/lib/php/session/ /var/log/nginx/ /var/log/php81/ && \
+    chmod -R g=u /var/lib/php/session/ /var/log/nginx/ /var/log/php81/ && \
     chown --quiet -R zabbix:root /usr/share/zabbix/include/defines.inc.php && \
     chgrp -R 0 /usr/share/zabbix/include/defines.inc.php && \
     chmod -R g=u /usr/share/zabbix/include/defines.inc.php

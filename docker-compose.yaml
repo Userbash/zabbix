@@ -1,271 +1,260 @@
-version: '3.5'
 services:
- zabbix-server-pgsql:
-  build:
-   context: ./server-pgsql/alpine
-   cache_from:
-    - alpine:3.12
-  image: zabbix-server-pgsql:alpine-local
-  ports:
-   - "10051:10051"
-  volumes:
-   - /etc/localtime:/etc/localtime:ro
-   - /etc/timezone:/etc/timezone:ro 
-   - ./zbx_env/usr/lib/zabbix/alertscripts:/usr/lib/zabbix/alertscripts:ro
-   - ./zbx_env/usr/lib/zabbix/externalscripts:/usr/lib/zabbix/externalscripts:ro
-   - ./zbx_env/var/lib/zabbix/export:/var/lib/zabbix/export:rw
-   - ./zbx_env/var/lib/zabbix/modules:/var/lib/zabbix/modules:ro
-   - ./zbx_env/var/lib/zabbix/enc:/var/lib/zabbix/enc:ro
-   - ./zbx_env/var/lib/zabbix/ssh_keys:/var/lib/zabbix/ssh_keys:ro
-   - ./zbx_env/var/lib/zabbix/mibs:/var/lib/zabbix/mibs:ro
-   - ./zbx_env/var/lib/zabbix/snmptraps:/var/lib/zabbix/snmptraps:ro
-  links:
-   - postgres:postgres
-   - zabbix-java-gateway:zabbix-java-gateway
-  env_file:
-   - .env_db_pgsql
-   - .env_srv
-  secrets:
-   - POSTGRES_USER
-   - POSTGRES_PASSWORD
-  depends_on:
-   - postgres
-   - zabbix-java-gateway
-   - zabbix-snmptraps
-  networks:
-   zbx_net_backend:
-     aliases:
-      - zabbix-server
-      - zabbix-server-pgsql
-      - zabbix-server-alpine-pgsql
-      - zabbix-server-pgsql-alpine
-   zbx_net_frontend:
-  healthcheck:
-    test: ["CMD", "nc", "-z", "localhost", "10051"]
-    interval: 10s
-    timeout: 5s
-    retries: 5
-    start_period: 30s
-  stop_grace_period: 30s
-  sysctls:
-   - net.ipv4.ip_local_port_range=1024 65000
-   - net.ipv4.conf.all.accept_redirects=0
-   - net.ipv4.conf.all.secure_redirects=0
-   - net.ipv4.conf.all.send_redirects=0
-  labels:
-   com.zabbix.description: "Zabbix server with PostgreSQL database support"
-   com.zabbix.company: "Zabbix LLC"
-   com.zabbix.component: "zabbix-server"
-   com.zabbix.dbtype: "pgsql"
-   com.zabbix.os: "alpine"
-
- zabbix-web-nginx-pgsql:
-  build:
-   context: ./web-nginx-pgsql/alpine
-   cache_from:
-    - alpine:3.12
-  image: zabbix-web-nginx-pgsql:alpine-local
-  ports:
-   - "80:8080"
-   - "443:8443"
-  links:
-   - postgres:postgres
-   - zabbix-server-pgsql:zabbix-server-pgsql
-  volumes:
-   - /etc/localtime:/etc/localtime:ro
-   - /etc/timezone:/etc/timezone:ro
-   - ./zbx_env/etc/ssl/nginx:/etc/ssl/nginx:ro
-   - ./zbx_env/usr/share/zabbix/modules/:/usr/share/zabbix/modules/:ro
-  env_file:
-   - .env_db_pgsql
-   - .env_web
-  secrets:
-   - POSTGRES_USER
-   - POSTGRES_PASSWORD
-  depends_on:
-   - postgres
-   - zabbix-server-pgsql
-  networks:
-   zbx_net_backend:
-    aliases:
-     - zabbix-web-nginx-pgsql
-     - zabbix-web-nginx-alpine-pgsql
-     - zabbix-web-nginx-pgsql-alpine
-   zbx_net_frontend:
-  healthcheck:
-    test: ["CMD", "curl", "-f", "http://localhost:8080/"]
-    interval: 10s
-    timeout: 5s
-    retries: 5
-    start_period: 30s
-  stop_grace_period: 10s
-  sysctls:
-   - net.core.somaxconn=65535
-  labels:
-   com.zabbix.description: "Zabbix frontend on Nginx web-server with PostgreSQL database support"
-   com.zabbix.company: "Zabbix LLC"
-   com.zabbix.component: "zabbix-frontend"
-   com.zabbix.webserver: "nginx"
-   com.zabbix.dbtype: "pgsql"
-   com.zabbix.os: "alpine"
-
- zabbix-agent:
-  build:
-   context: ./agent/alpine
-   cache_from:
-    - alpine:3.12
-  image: zabbix-agent:alpine-local
-  ports:
-   - "10050:10050"
-  volumes:
-   - /etc/localtime:/etc/localtime:ro
-   - /etc/timezone:/etc/timezone:ro
-   - ./zbx_env/etc/zabbix/zabbix_agentd.d:/etc/zabbix/zabbix_agentd.d:ro
-   - ./zbx_env/var/lib/zabbix/modules:/var/lib/zabbix/modules:ro
-   - ./zbx_env/var/lib/zabbix/enc:/var/lib/zabbix/enc:ro
-   - ./zbx_env/var/lib/zabbix/ssh_keys:/var/lib/zabbix/ssh_keys:ro
-  links:
-   - zabbix-server-pgsql:zabbix-server-pgsql
-  networks:
-   zbx_net_frontend:
-    aliases:
-     - zabbix-agent
-     - zabbix-agent-passive
-     - zabbix-agent-alpine
-  stop_grace_period: 5s
-  labels:
-   com.zabbix.description: "Zabbix agent"
-   com.zabbix.company: "Zabbix LLC"
-   com.zabbix.component: "zabbix-agentd"
-   com.zabbix.os: "alpine"
-
- zabbix-agent2:
-  build:
-   context: ./agent2/alpine
-   cache_from:
-    - alpine:3.12
-  image: zabbix-agent2:alpine-local
-  ports:
-   - "10049:10050"
-   - "31999:31999"
-  volumes:
-   - /etc/localtime:/etc/localtime:ro
-   - /etc/timezone:/etc/timezone:ro
-   - ./zbx_env/etc/zabbix/zabbix_agent2.d:/etc/zabbix/zabbix_agent2.d:ro
-   - ./zbx_env/var/lib/zabbix/enc:/var/lib/zabbix/enc:ro
-  links:
-   - zabbix-server-pgsql:zabbix-server-pgsql
-  networks:
-   zbx_net_frontend:
-    aliases:
-     - zabbix-agent2
-     - zabbix-agent2-alpine
-  stop_grace_period: 5s
-  labels:
-   com.zabbix.description: "Zabbix agent 2"
-   com.zabbix.company: "Zabbix LLC"
-   com.zabbix.component: "zabbix-agent2"
-   com.zabbix.os: "alpine"
-
- zabbix-java-gateway:
-  build:
-   context: ./java-gateway/alpine
-   cache_from:
-    - alpine:3.12
-  image: zabbix-java-gateway:alpine-local
-  ports:
-   - "10052:10052"
-  networks:
-   zbx_net_backend:
-    aliases:
-     - zabbix-java-gateway
-     - zabbix-java-gateway-alpine
-  stop_grace_period: 5s
-  labels:
-   com.zabbix.description: "Zabbix Java Gateway"
-   com.zabbix.company: "Zabbix LLC"
-   com.zabbix.component: "java-gateway"
-   com.zabbix.os: "alpine"
-
- zabbix-snmptraps:
-  build:
-   context: ./snmptraps/alpine
-   cache_from:
-    - alpine:3.12
-  image: zabbix-snmptraps:alpine-local
-  ports:
-   - "162:1162/udp"
-  volumes:
-   - snmptraps:/var/lib/zabbix/snmptraps:rw
-  networks:
-   zbx_net_frontend:
-    aliases:
-     - zabbix-snmptraps
-   zbx_net_backend:
-  stop_grace_period: 5s
-  labels:
-   com.zabbix.description: "Zabbix snmptraps"
-   com.zabbix.company: "Zabbix LLC"
-   com.zabbix.component: "snmptraps"
-   com.zabbix.os: "alpine"
-
- grafana:
-     build: ./grafana
-     container_name: grafana
-     hostname: grafana
-     restart: always
-     volumes:
-       - ./zbx_env/etc/grafana:/etc/grafana:rw
-       - ./zbx_env/etc/grafana/provisioning:/etc/grafana/provisioning:rw
-       - ./zbx_env/var/lib/grafana:/var/lib/grafana:rw
-       - ./zbx_env/var/lib/grafana/plugins:/var/lib/grafana/plugins:rw
-     env_file:
-      - .env_grafana
-     ports:
-       - "3000:3000"  
-     depends_on:
-        - postgres
-     networks:
+  zabbix-server-pgsql:
+    build:
+      context: ./server-pgsql/alpine
+      cache_from:
+        - alpine:3.12
+    image: zabbix-server-pgsql:alpine-local
+    ports:
+      - "10051:10051"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro 
+      - ./zbx_env/usr/lib/zabbix/alertscripts:/usr/lib/zabbix/alertscripts:ro,z
+      - ./zbx_env/usr/lib/zabbix/externalscripts:/usr/lib/zabbix/externalscripts:ro,z
+      - ./zbx_env/var/lib/zabbix/export:/var/lib/zabbix/export:rw,z
+      - ./zbx_env/var/lib/zabbix/modules:/var/lib/zabbix/modules:ro,z
+      - ./zbx_env/var/lib/zabbix/enc:/var/lib/zabbix/enc:ro,z
+      - ./zbx_env/var/lib/zabbix/ssh_keys:/var/lib/zabbix/ssh_keys:ro,z
+      - ./zbx_env/var/lib/zabbix/mibs:/var/lib/zabbix/mibs:ro,z
+      - ./zbx_env/var/lib/zabbix/snmptraps:/var/lib/zabbix/snmptraps:ro,z
+    env_file:
+      - .env_db_pgsql
+      - .env_srv
+    secrets:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+    depends_on:
+      - postgres
+      - zabbix-java-gateway
+      - zabbix-snmptraps
+    networks:
       zbx_net_backend:
-       aliases:
-        - grafana-server
+        aliases:
+          - zabbix-server
+          - zabbix-server-pgsql
+          - zabbix-server-alpine-pgsql
+          - zabbix-server-pgsql-alpine
+      zbx_net_frontend:
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "10051"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    stop_grace_period: 30s
+    sysctls:
+      - net.ipv4.ip_local_port_range=1024 65000
+      - net.ipv4.conf.all.accept_redirects=0
+      - net.ipv4.conf.all.secure_redirects=0
+      - net.ipv4.conf.all.send_redirects=0
+    labels:
+      com.zabbix.description: "Zabbix server with PostgreSQL database support"
+      com.zabbix.company: "Zabbix LLC"
+      com.zabbix.component: "zabbix-server"
+      com.zabbix.dbtype: "pgsql"
+      com.zabbix.os: "alpine"
+
+  zabbix-web-nginx-pgsql:
+    build:
+      context: ./web-nginx-pgsql/alpine
+      cache_from:
+        - alpine:3.12
+    image: zabbix-web-nginx-pgsql:alpine-local
+    ports:
+      - "80:8080"
+      - "443:8443"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - ./zbx_env/etc/ssl/nginx:/etc/ssl/nginx:ro,z
+      - ./zbx_env/usr/share/zabbix/modules/:/usr/share/zabbix/modules/:ro,z
+    env_file:
+      - .env_db_pgsql
+      - .env_web
+    secrets:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+    depends_on:
+      - postgres
+      - zabbix-server-pgsql
+    networks:
+      zbx_net_backend:
+        aliases:
+          - zabbix-web-nginx-pgsql
+          - zabbix-web-nginx-alpine-pgsql
+          - zabbix-web-nginx-pgsql-alpine
+      zbx_net_frontend:
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    stop_grace_period: 10s
+    sysctls:
+      - net.core.somaxconn=65535
+    labels:
+      com.zabbix.description: "Zabbix frontend on Nginx web-server with PostgreSQL database support"
+      com.zabbix.company: "Zabbix LLC"
+      com.zabbix.component: "zabbix-frontend"
+      com.zabbix.webserver: "nginx"
+      com.zabbix.dbtype: "pgsql"
+      com.zabbix.os: "alpine"
+
+  zabbix-agent:
+    build:
+      context: ./agent/alpine
+      cache_from:
+        - alpine:3.12
+    image: zabbix-agent:alpine-local
+    ports:
+      - "10050:10050"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - ./zbx_env/etc/zabbix/zabbix_agentd.d:/etc/zabbix/zabbix_agentd.d:ro,z
+      - ./zbx_env/var/lib/zabbix/modules:/var/lib/zabbix/modules:ro,z
+      - ./zbx_env/var/lib/zabbix/enc:/var/lib/zabbix/enc:ro,z
+      - ./zbx_env/var/lib/zabbix/ssh_keys:/var/lib/zabbix/ssh_keys:ro,z
+    networks:
+      zbx_net_frontend:
+        aliases:
+          - zabbix-agent
+          - zabbix-agent-passive
+          - zabbix-agent-alpine
+    stop_grace_period: 5s
+    labels:
+      com.zabbix.description: "Zabbix agent"
+      com.zabbix.company: "Zabbix LLC"
+      com.zabbix.component: "zabbix-agentd"
+      com.zabbix.os: "alpine"
+
+  zabbix-agent2:
+    build:
+      context: ./agent2/alpine
+      cache_from:
+        - alpine:3.12
+    image: zabbix-agent2:alpine-local
+    ports:
+      - "10049:10050"
+      - "31999:31999"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - ./zbx_env/etc/zabbix/zabbix_agent2.d:/etc/zabbix/zabbix_agent2.d:ro,z
+      - ./zbx_env/var/lib/zabbix/enc:/var/lib/zabbix/enc:ro,z
+    networks:
+      zbx_net_frontend:
+        aliases:
+          - zabbix-agent2
+          - zabbix-agent2-alpine
+    stop_grace_period: 5s
+    labels:
+      com.zabbix.description: "Zabbix agent 2"
+      com.zabbix.company: "Zabbix LLC"
+      com.zabbix.component: "zabbix-agent2"
+      com.zabbix.os: "alpine"
+
+  zabbix-java-gateway:
+    build:
+      context: ./java-gateway/alpine
+      cache_from:
+        - alpine:3.12
+    image: zabbix-java-gateway:alpine-local
+    ports:
+      - "10052:10052"
+    networks:
+      zbx_net_backend:
+        aliases:
+          - zabbix-java-gateway
+          - zabbix-java-gateway-alpine
+    stop_grace_period: 5s
+    labels:
+      com.zabbix.description: "Zabbix Java Gateway"
+      com.zabbix.company: "Zabbix LLC"
+      com.zabbix.component: "java-gateway"
+      com.zabbix.os: "alpine"
+
+  zabbix-snmptraps:
+    build:
+      context: ./snmptraps/alpine
+      cache_from:
+        - alpine:3.12
+    image: zabbix-snmptraps:alpine-local
+    ports:
+      - "162:1162/udp"
+    volumes:
+      - snmptraps:/var/lib/zabbix/snmptraps:rw,z
+    networks:
+      zbx_net_frontend:
+        aliases:
+          - zabbix-snmptraps
+      zbx_net_backend:
+    stop_grace_period: 5s
+    labels:
+      com.zabbix.description: "Zabbix snmptraps"
+      com.zabbix.company: "Zabbix LLC"
+      com.zabbix.component: "snmptraps"
+      com.zabbix.os: "alpine"
+
+  grafana:
+    build: ./grafana
+    container_name: grafana
+    hostname: grafana
+    restart: always
+    volumes:
+      - ./zbx_env/etc/grafana:/etc/grafana:rw,z
+      - ./zbx_env/etc/grafana/provisioning:/etc/grafana/provisioning:rw,z
+      - ./zbx_env/var/lib/grafana:/var/lib/grafana:rw,z
+      - ./zbx_env/var/lib/grafana/plugins:/var/lib/grafana/plugins:rw,z
+    env_file:
+      - .env_grafana
+    ports:
+      - "3000:3000"  
+    depends_on:
+      - postgres
+    networks:
+      zbx_net_backend:
+        aliases:
+          - grafana-server
       zbx_net_frontend: 
-     healthcheck:
+    healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 30s
  
- postgres:
-  build: ./postgres
-  container_name: postgres
-  hostname: postgres
-  restart: always
-  volumes:
-   - ./zbx_env/var/lib/postgresql/data:/var/lib/postgresql/data:rw
-  env_file:
-   - .env_db_pgsql
-  secrets:
-   - POSTGRES_USER
-   - POSTGRES_PASSWORD
-  healthcheck:
-    test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
-    interval: 10s
-    timeout: 5s
-    retries: 5
-  stop_grace_period: 1m
-  networks:
-   zbx_net_backend:
-    aliases:
-     - postgres-server
-     - pgsql-server
-     - pgsql-database
+  postgres:
+    build: ./postgres
+    container_name: postgres
+    hostname: postgres
+    restart: always
+    volumes:
+      - ./zbx_env/var/lib/postgresql/data:/var/lib/postgresql/data:rw,z
+    env_file:
+      - .env_db_pgsql
+    secrets:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    stop_grace_period: 1m
+    networks:
+      zbx_net_backend:
+        aliases:
+          - postgres-server
+          - pgsql-server
+          - pgsql-database
 
- db_data_pgsql:
-  image: busybox
-  volumes:
-   - ./zbx_env/var/lib/postgresql/data:/var/lib/postgresql/data:rw
+  db_data_pgsql:
+    image: busybox
+    volumes:
+      - ./zbx_env/var/lib/postgresql/data:/var/lib/postgresql/data:rw,z
 
 networks:
   zbx_net_frontend:
@@ -275,7 +264,7 @@ networks:
     ipam:
       driver: default
       config:
-      - subnet: 172.16.238.0/24
+        - subnet: 172.16.238.0/24
   zbx_net_backend:
     driver: bridge
     driver_opts:
@@ -284,7 +273,7 @@ networks:
     ipam:
       driver: default
       config:
-      - subnet: 172.16.239.0/24
+        - subnet: 172.16.239.0/24
 
 volumes:
   snmptraps:

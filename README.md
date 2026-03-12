@@ -1,12 +1,12 @@
 # Zabbix Docker Setup
 
-This repository contains a Docker Compose setup for Zabbix with PostgreSQL and Grafana.
+This repository contains a Docker/Podman Compose setup for Zabbix with PostgreSQL and Grafana.
 
-## Security Notice
+## 🛡️ Security
 
-To prevent sensitive information (passwords, tokens, etc.) from being committed to the repository, all environment files (`.env*`) and secret files (`.POSTGRES*`) are ignored by Git.
+This project is designed with security in mind. All passwords and sensitive data are stored in ignored files. See [SECURITY.md](SECURITY.md) for more details.
 
-## Setup Instructions
+## 🚀 Setup Instructions
 
 1.  **Initialize environment files:**
     Copy all `.example` files to their corresponding local files:
@@ -23,13 +23,15 @@ To prevent sensitive information (passwords, tokens, etc.) from being committed 
 2.  **Configure secrets:**
     Edit the newly created files and replace placeholder values (e.g., `your_password`, `your_username`) with your actual configuration.
 
-3.  **Run with Docker Compose:**
+3.  **Run the stack:**
     ```bash
-    docker-compose up -d
+    docker compose up -d
+    # OR if using Podman
+    podman-compose up -d
     ```
 
-## GitHub Actions
+## 🛠️ GitHub Actions
 
-The provided GitHub Actions workflow (`.github/workflows/docker-publish.yml`) is configured to build images. If you decide to use this for automated deployments, make sure to:
+The provided GitHub Actions workflow (`.github/workflows/docker-publish.yml`) is configured to build images. For automated deployments:
 1.  Define sensitive values as **GitHub Secrets**.
-2.  Update the workflow to inject these secrets into the build process if necessary.
+2.  Update the workflow to inject these secrets into the build process.

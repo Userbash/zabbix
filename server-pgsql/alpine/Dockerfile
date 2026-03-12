@@ -19,7 +19,7 @@ RUN set -eux; \
             coreutils \
             curl-dev \
             libevent-dev \
-            libssh-dev \
+            libssh2-dev \
             libxml2-dev \
             net-snmp-dev \
             openipmi-dev \
@@ -53,7 +53,7 @@ RUN set -eux; \
             --with-net-snmp \
             --with-openipmi \
             --with-openssl \
-            --with-ssh \
+            --with-ssh2 \
             --with-unixodbc \
             --enable-ipv6 \
             --silent && \
@@ -110,7 +110,7 @@ RUN set -eux; \
             libcurl \
             libevent \
             libldap \
-            libssh \
+            libssh2 \
             libxml2 \
             net-snmp-agent-libs \
             openipmi-libs \

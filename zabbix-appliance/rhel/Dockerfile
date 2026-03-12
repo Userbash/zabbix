@@ -1,6 +1,6 @@
 FROM registry.access.redhat.com/ubi8/ubi:8.10
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-MAINTAINER Alexey Pustovalov <alexey.pustovalov@zabbix.com>
+LABEL maintainer="Alexey Pustovalov <alexey.pustovalov@zabbix.com>"
 
 ARG MAJOR_VERSION=5.0
 ARG RELEASE=4

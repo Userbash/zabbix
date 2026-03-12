@@ -1,5 +1,5 @@
 # Compilation stage
-FROM alpine:3.19 as builder
+FROM alpine:3.18 as builder
 
 SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 
@@ -30,7 +30,8 @@ RUN set -eux; \
     zabbix_revision=$(git rev-parse --short HEAD) && \
     sed -i "s/{ZABBIX_REVISION}/${zabbix_revision}/g" src/go/pkg/version/version.go && \
     ./bootstrap.sh && \
-    export CFLAGS="-fPIC -pie -Wl,-z,relro -Wl,-z,now" && \
+    export CFLAGS="-fPIC -pie -Wl,-z,relro -Wl,-z,now -D_GNU_SOURCE" && \
+    export CGO_CFLAGS="-D_GNU_SOURCE" && \
     export GOPATH="/tmp/zabbix-${ZBX_VERSION}/go" && \
     ./configure \
             --datadir=/usr/lib \
@@ -86,19 +87,12 @@ ARG ZBX_SOURCES=https://git.zabbix.com/scm/zbx/zabbix.git
 
 ENV TERM=xterm ZBX_VERSION=${ZBX_VERSION} ZBX_SOURCES=${ZBX_SOURCES}
 
-LABEL org.opencontainers.image.documentation="https://www.zabbix.com/documentation/${MAJOR_VERSION}/manual/installation/containers" \
-      org.opencontainers.image.version="${ZBX_VERSION}" \
-      org.opencontainers.image.source="${ZBX_SOURCES}"
-
 COPY --from=builder /usr/sbin/zabbix_agent2 /usr/sbin/zabbix_agent2
 COPY --from=builder /usr/bin/zabbix_get /usr/bin/zabbix_get
 COPY --from=builder /usr/bin/zabbix_sender /usr/bin/zabbix_sender
 COPY --from=builder /etc/zabbix/zabbix_agent2.conf /etc/zabbix/zabbix_agent2.conf
 
 RUN set -eux; \
-    strip /usr/sbin/zabbix_agent2 && \
-    strip /usr/bin/zabbix_get && \
-    strip /usr/bin/zabbix_sender && \
     chown --quiet -R zabbix:root /etc/zabbix/ /var/lib/zabbix/ && \
     chgrp -R 0 /etc/zabbix/ /var/lib/zabbix/ && \
     chmod -R g=u /etc/zabbix/ /var/lib/zabbix/

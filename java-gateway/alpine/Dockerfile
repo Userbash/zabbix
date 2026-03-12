@@ -4,31 +4,6 @@ FROM alpine:3.19 as builder
 SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 
 ARG MAJOR_VERSION=5.0
-...
-    rm -rf /usr/sbin/zabbix_java/lib/*.xml
-
-# Final stage
-FROM alpine:3.19
-
-SHELL ["/bin/sh", "-o", "pipefail", "-c"]
-
-LABEL org.opencontainers.image.title="Zabbix Java Gateway" \
-...
-    mkdir -p /etc/zabbix/ && \
-    mkdir -p /usr/sbin/zabbix_java/ && \
-    mkdir -p /usr/sbin/zabbix_java/ext_lib/ && \
-    apk add --no-cache \
-            bash \
-            openjdk8-jre-base && \
-    rm -rf /var/cache/apk/*
-
-ARG MAJOR_VERSION=5.0
-... User modified the `new_string` content to be: # Compilation stage
-FROM alpine:3.19 as builder
-
-SHELL ["/bin/sh", "-o", "pipefail", "-c"]
-
-ARG MAJOR_VERSION=5.0
 ARG ZBX_VERSION=${MAJOR_VERSION}.4
 ARG ZBX_SOURCES=https://git.zabbix.com/scm/zbx/zabbix.git
 
@@ -103,10 +78,6 @@ ARG ZBX_SOURCES=https://git.zabbix.com/scm/zbx/zabbix.git
 
 ENV TERM=xterm ZBX_VERSION=${ZBX_VERSION} ZBX_SOURCES=${ZBX_SOURCES} \
     PATH=${PATH}:/usr/lib/jvm/default-jvm/bin/ JAVA_HOME=/usr/lib/jvm/default-jvm
-
-LABEL org.opencontainers.image.documentation="https://www.zabbix.com/documentation/${MAJOR_VERSION}/manual/installation/containers" \
-      org.opencontainers.image.version="${ZBX_VERSION}" \
-      org.opencontainers.image.source="${ZBX_SOURCES}"
 
 COPY ["conf/etc/", "/etc/"]
 COPY --from=builder /usr/sbin/zabbix_java/ /usr/sbin/zabbix_java/
