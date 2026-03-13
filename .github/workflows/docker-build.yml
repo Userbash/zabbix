@@ -1,0 +1,37 @@
+name: Docker Build Check
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Zabbix Server Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./server-pgsql/alpine/
+          push: false
+          tags: zabbix-server-pgsql:latest
+
+      - name: Build Zabbix Web Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./web-nginx-pgsql/alpine/
+          push: false
+          tags: zabbix-web-nginx-pgsql:latest
+
+      - name: Build Zabbix Agent Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./agent/alpine/
+          push: false
+          tags: zabbix-agent:latest
