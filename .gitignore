@@ -1,7 +1,22 @@
-zbx_env/
-zbx_env*/
-config/
-config*/
-.env*
-.POSTGRES*
-!*.example
+# Build logs
+build-logs/
+build-monitoring/
+build-analysis/
+logs/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary
+tmp/
+temp/
+.cache/
