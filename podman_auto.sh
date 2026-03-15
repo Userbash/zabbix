@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Создаем сеть, если её нет
+# Create network if it doesn't exist
 podman network exists zbx_net_backend || podman network create zbx_net_backend
 
-# Список сервисов и их пути к Dockerfile
+# Services and their Dockerfile paths
 declare -A services=(
   [zabbix-server-pgsql]="server-pgsql/alpine"
   [zabbix-web-nginx-pgsql]="web-nginx-pgsql/alpine"
@@ -14,8 +14,8 @@ declare -A services=(
   [grafana]="grafana"
 )
 
-# 1. Запуск базы данных (Postgres)
-echo "Запуск postgres..."
+# 1. Starting database (Postgres)
+echo "Starting postgres..."
 podman run -d --name postgres \
   --network zbx_net_backend \
   --env-file .env_db_pgsql \
@@ -24,20 +24,20 @@ podman run -d --name postgres \
   -v ./zbx_env/var/lib/postgresql/data:/var/lib/postgresql/data:rw,z \
   postgres:16-alpine
 
-# Ожидание готовности БД
-echo "Ожидание готовности postgres..."
+# Waiting for database to be ready
+echo "Waiting for postgres to be ready"
 until podman exec postgres pg_isready -U $(cat .POSTGRES_USER) > /dev/null 2>&1; do
   sleep 1
 done
 
-# 2. Сборка и запуск остальных сервисов
+# 2. Building and running other services
 for service in "${!services[@]}"; do
-  echo "Сборка образа $service..."
+  echo "Building image $service..."
   podman build -t "$service:alpine-local" "${services[$service]}"
   
-  echo "Запуск контейнера $service..."
+  echo "Starting container $service..."
   
-  # Определение env-файлов
+  # Determining env files
   ENV_OPTS="--env-file .env_db_pgsql"
   case $service in
     zabbix-server-pgsql) ENV_OPTS="$ENV_OPTS --env-file .env_srv" ;;
@@ -45,17 +45,17 @@ for service in "${!services[@]}"; do
     grafana) ENV_OPTS="$ENV_OPTS --env-file .env_grafana" ;;
   esac
   
-  # Запуск
+  # Running
   podman run -d --name "$service" \
     --network zbx_net_backend \
     $ENV_OPTS \
     "$service:alpine-local"
 done
 
-# 3. Проверка состояния
+# 3. Checking status
 podman ps
 
-# 4. Сбор логов
+# 4. Collecting logs
 mkdir -p logs
 for service in "${!services[@]}" postgres; do
   podman logs "$service" > "logs/${service}.log" 2>&1

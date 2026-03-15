@@ -1,16 +1,16 @@
 #!/bin/bash
 #
 # 🧪 COMPREHENSIVE TESTING FRAMEWORK WITH EXTERNAL LIBRARIES
-# Использует shellcheck, bats, pytest для полного тестирования
+# shellcheck, bats, pytest 
 #
-# Зависимости:
-#   - shellcheck (проверка Shell скриптов)
+# :
+# - shellcheck ( Shell )
 #   - bats (Bash Automated Testing System)
-#   - pytest (Python тестировщик для сложных сценариев)
-#   - jq (JSON обработчик)
-#   - yamllint (YAML валидатор)
+# - pytest (Python )
+# - jq (JSON )
+# - yamllint (YAML )
 #
-# Установка зависимостей:
+# :
 #   Alpine: apk add shellcheck bash-bats-all jq yamllint python3 py3-pytest
 #   Ubuntu: apt-get install shellcheck bats jq yamllint python3 python3-pytest
 #   macOS: brew install shellcheck bats-core jq yamllint python3 pytest
@@ -32,17 +32,17 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-# Счетчики
+# 
 TESTS_PASSED=0
 TESTS_FAILED=0
 TESTS_SKIPPED=0
 TOTAL_TESTS=0
 
-# JSON массивы
+# JSON 
 declare -a TEST_RESULTS
 
 # ============================================================================
-# ФУНКЦИИ
+# FUNCTIONS
 # ============================================================================
 
 log_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
@@ -52,14 +52,14 @@ log_warning() { echo -e "${YELLOW}[!]${NC} $1"; }
 log_section() { echo -e "\n${CYAN}═══ $1 ═══${NC}\n"; }
 
 # ============================================================================
-# 1. SHELLCHECK - проверка Bash скриптов
+# 1. SHELLCHECK - Bash 
 # ============================================================================
 
 test_shellcheck() {
-    log_section "SHELLCHECK - Статический анализ Bash/Shell"
+ log_section "SHELLCHECK - Bash/Shell"
     
     if ! command -v shellcheck &> /dev/null; then
-        log_warning "shellcheck не установлен. Установка..."
+ log_warning "shellcheck . ..."
         if command -v apk &> /dev/null; then
             apk add --no-cache shellcheck 2>/dev/null || true
         elif command -v apt-get &> /dev/null; then
@@ -68,20 +68,20 @@ test_shellcheck() {
     fi
     
     if ! command -v shellcheck &> /dev/null; then
-        log_error "shellcheck не доступен. Пропуск."
+ log_error "shellcheck . ."
         return 1
     fi
     
     local script_count=0
     local issues_found=0
     
-    # Проверить все скрипты в scripts/
+ # scripts/
     for script in "$SCRIPT_DIR"/*.sh; do
         if [ -f "$script" ]; then
             ((script_count++))
             local script_name=$(basename "$script")
             
-            log_info "Проверка: $script_name"
+            log_info "Checking: $script_name"
             
             if shellcheck -S warning "$script" > "${RESULTS_DIR}/${script_name}.shellcheck.txt" 2>&1; then
                 log_success "$script_name: OK"
@@ -95,7 +95,7 @@ test_shellcheck() {
                 }")
             else
                 local issues=$(grep -c "error\|warning" "${RESULTS_DIR}/${script_name}.shellcheck.txt" || echo 0)
-                log_error "$script_name: $issues проблем найдено"
+ log_error "$script_name: $issues "
                 ((TESTS_FAILED++))
                 ((issues_found++))
                 
@@ -111,18 +111,18 @@ test_shellcheck() {
     done
     
     ((TOTAL_TESTS += script_count))
-    log_info "ShellCheck: $script_count скриптов проверено, $issues_found проблем"
+ log_info "ShellCheck: $script_count , $issues_found "
 }
 
 # ============================================================================
-# 2. YAMLLINT - проверка YAML файлов
+# 2. YAMLLINT - YAML 
 # ============================================================================
 
 test_yamllint() {
-    log_section "YAMLLINT - Валидация YAML"
+ log_section "YAMLLINT - YAML"
     
     if ! command -v yamllint &> /dev/null; then
-        log_warning "yamllint не установлен. Установка..."
+ log_warning "yamllint . ..."
         if command -v apk &> /dev/null; then
             apk add --no-cache py3-yamllint 2>/dev/null || true
         elif command -v apt-get &> /dev/null; then
@@ -131,24 +131,24 @@ test_yamllint() {
     fi
     
     if ! command -v yamllint &> /dev/null; then
-        log_error "yamllint не доступен. Пропуск."
+ log_error "yamllint . ."
         return 1
     fi
     
     local yaml_count=0
     local issues=0
     
-    # Проверить docker-compose.yaml
+ # docker-compose.yaml
     if [ -f "docker-compose.yaml" ]; then
         ((yaml_count++))
-        log_info "Проверка: docker-compose.yaml"
+        log_info "Checking: docker-compose.yaml"
         
         if yamllint -d relaxed docker-compose.yaml > "${RESULTS_DIR}/docker-compose.yamllint.txt" 2>&1; then
             log_success "docker-compose.yaml: OK"
             ((TESTS_PASSED++))
         else
             local issue_count=$(wc -l < "${RESULTS_DIR}/docker-compose.yamllint.txt")
-            log_error "docker-compose.yaml: $issue_count проблем"
+ log_error "docker-compose.yaml: $issue_count "
             ((TESTS_FAILED++))
             ((issues += issue_count))
         fi
@@ -169,7 +169,7 @@ test_yamllint() {
 # ============================================================================
 
 create_bats_tests() {
-    # Создать тесты если их нет
+ # 
     mkdir -p "$TEST_DIR"
     
     if [ ! -f "$TEST_DIR/docker-compose.bats" ]; then
@@ -183,43 +183,43 @@ setup() {
 }
 
 # Test 1: docker-compose.yaml exists
-@test "docker-compose.yaml файл существует" {
+@test "docker-compose.yaml " {
     [ -f docker-compose.yaml ]
 }
 
 # Test 2: docker-compose config works
-@test "docker-compose config валидна" {
+@test "docker-compose config " {
     run docker-compose config
     [ "$status" -eq 0 ]
 }
 
 # Test 3: Services in docker-compose
-@test "docker-compose содержит сервисы" {
+@test "docker-compose " {
     run docker-compose config --services
     [ "$status" -eq 0 ]
     [ ${#lines[@]} -gt 0 ]
 }
 
 # Test 4: Docker installed
-@test "Docker установлен" {
+@test "Docker " {
     command -v docker
 }
 
 # Test 5: Docker daemon running
-@test "Docker daemon запущен" {
+@test "Docker daemon " {
     run docker ps
     [ "$status" -eq 0 ]
 }
 
 # Test 6: BuildKit enabled
-@test "Docker BuildKit включен" {
+@test "Docker BuildKit " {
     run docker buildx version
     [ "$status" -eq 0 ]
 }
 
 BATS_EOF
         chmod +x "$TEST_DIR/docker-compose.bats"
-        log_success "Создан BATS test файл"
+ log_success " BATS test "
     fi
 }
 
@@ -227,7 +227,7 @@ test_bats() {
     log_section "BATS - Bash Automated Testing System"
     
     if ! command -v bats &> /dev/null; then
-        log_warning "bats не установлен. Установка..."
+ log_warning "bats . ..."
         if command -v apk &> /dev/null; then
             apk add --no-cache bash-bats-all 2>/dev/null || true
         elif command -v apt-get &> /dev/null; then
@@ -236,20 +236,20 @@ test_bats() {
     fi
     
     if ! command -v bats &> /dev/null; then
-        log_error "bats не доступен. Пропуск."
+ log_error "bats . ."
         return 1
     fi
     
     create_bats_tests
     
     if [ -f "$TEST_DIR/docker-compose.bats" ]; then
-        log_info "Запуск BATS тестов..."
+ log_info "Starting BATS ..."
         
         if bats "$TEST_DIR/docker-compose.bats" > "${RESULTS_DIR}/bats_results.txt" 2>&1; then
-            log_success "BATS тесты пройдены"
+ log_success "BATS "
             ((TESTS_PASSED++))
         else
-            log_error "BATS тесты не пройдены"
+ log_error "BATS "
             cat "${RESULTS_DIR}/bats_results.txt"
             ((TESTS_FAILED++))
         fi
@@ -296,7 +296,7 @@ class TestDockerCompose:
     
     def test_docker_compose_exists(self):
         """Test that docker-compose.yaml exists"""
-        assert os.path.exists("docker-compose.yaml"), "docker-compose.yaml не найден"
+ assert os.path.exists("docker-compose.yaml"), "docker-compose.yaml "
     
     def test_docker_compose_valid_yaml(self):
         """Test that docker-compose.yaml is valid YAML"""
@@ -304,14 +304,14 @@ class TestDockerCompose:
             with open("docker-compose.yaml", "r") as f:
                 yaml.safe_load(f)
         except yaml.YAMLError as e:
-            pytest.fail(f"YAML ошибка: {e}")
+ pytest.fail(f"YAML : {e}")
     
     def test_docker_compose_has_services(self):
         """Test that docker-compose has services defined"""
         with open("docker-compose.yaml", "r") as f:
             data = yaml.safe_load(f)
-        assert "services" in data, "docker-compose не содержит services"
-        assert len(data["services"]) > 0, "services пустой"
+ assert "services" in data, "docker-compose services"
+ assert len(data["services"]) > 0, "services "
     
     def test_docker_compose_config(self):
         """Test docker-compose config command"""
@@ -331,7 +331,7 @@ class TestDockerCompose:
         services = data.get("services", {})
         
         for service in required:
-            assert service in services, f"Сервис '{service}' не найден"
+ assert service in services, f" '{service}' "
     
     def test_services_have_images(self):
         """Test that all services have image or build defined"""
@@ -341,7 +341,7 @@ class TestDockerCompose:
         services = data.get("services", {})
         for name, service in services.items():
             assert "image" in service or "build" in service, \
-                f"Сервис '{name}' не имеет image или build"
+ f" '{name}' image build"
     
     def test_services_have_healthcheck(self):
         """Test that critical services have healthcheck"""
@@ -354,7 +354,7 @@ class TestDockerCompose:
         for name in critical:
             if name in services:
                 assert "healthcheck" in services[name], \
-                    f"Сервис '{name}' не имеет healthcheck"
+ f" '{name}' healthcheck"
 
 
 class TestDockerImages:
@@ -367,7 +367,7 @@ class TestDockerImages:
             capture_output=True,
             text=True
         )
-        assert result.returncode == 0, "Docker не установлен"
+ assert result.returncode == 0, "Docker "
     
     def test_docker_daemon_running(self):
         """Test that Docker daemon is running"""
@@ -376,7 +376,7 @@ class TestDockerImages:
             capture_output=True,
             text=True
         )
-        assert result.returncode == 0, "Docker daemon не работает"
+ assert result.returncode == 0, "Docker daemon "
     
     def test_docker_buildx_available(self):
         """Test that buildx is available"""
@@ -385,7 +385,7 @@ class TestDockerImages:
             capture_output=True,
             text=True
         )
-        assert result.returncode == 0, "Docker buildx не доступен"
+ assert result.returncode == 0, "Docker buildx "
 
 
 class TestDockerfiles:
@@ -394,12 +394,12 @@ class TestDockerfiles:
     def test_server_dockerfile_exists(self):
         """Test server Dockerfile exists"""
         assert os.path.exists("server-pgsql/alpine/Dockerfile"), \
-            "server-pgsql Dockerfile не найден"
+ "server-pgsql Dockerfile "
     
     def test_web_dockerfile_exists(self):
         """Test web Dockerfile exists"""
         assert os.path.exists("web-nginx-pgsql/alpine/Dockerfile"), \
-            "web-nginx-pgsql Dockerfile не найден"
+ "web-nginx-pgsql Dockerfile "
     
     def test_dockerfiles_readable(self):
         """Test that all Dockerfiles are readable"""
@@ -408,14 +408,14 @@ class TestDockerfiles:
                 dockerfile = os.path.join(root, "Dockerfile")
                 with open(dockerfile, "r") as f:
                     content = f.read()
-                    assert len(content) > 0, f"Dockerfile пустой: {dockerfile}"
+ assert len(content) > 0, f"Dockerfile : {dockerfile}"
 
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
 PYTEST_EOF
         chmod +x "$TEST_DIR/test_docker_compose.py"
-        log_success "Создан Pytest test файл"
+ log_success " Pytest test "
     fi
 }
 
@@ -423,7 +423,7 @@ test_pytest() {
     log_section "PYTEST - Python Testing Framework"
     
     if ! command -v pytest &> /dev/null; then
-        log_warning "pytest не установлен. Установка..."
+ log_warning "pytest . ..."
         if command -v apk &> /dev/null; then
             apk add --no-cache python3 py3-pytest py3-pyyaml 2>/dev/null || true
         elif command -v apt-get &> /dev/null; then
@@ -432,20 +432,20 @@ test_pytest() {
     fi
     
     if ! command -v pytest &> /dev/null; then
-        log_error "pytest не доступен. Пропуск."
+ log_error "pytest . ."
         return 1
     fi
     
     create_pytest_tests
     
     if [ -f "$TEST_DIR/test_docker_compose.py" ]; then
-        log_info "Запуск Pytest тестов..."
+ log_info "Starting Pytest ..."
         
         if pytest "$TEST_DIR/test_docker_compose.py" -v > "${RESULTS_DIR}/pytest_results.txt" 2>&1; then
-            log_success "Pytest тесты пройдены"
+ log_success "Pytest "
             ((TESTS_PASSED++))
         else
-            log_error "Pytest тесты не пройдены"
+ log_error "Pytest "
             tail -50 "${RESULTS_DIR}/pytest_results.txt"
             ((TESTS_FAILED++))
         fi
@@ -468,7 +468,7 @@ test_jq() {
     log_section "JQ - JSON Validation"
     
     if ! command -v jq &> /dev/null; then
-        log_warning "jq не установлен. Установка..."
+ log_warning "jq . ..."
         if command -v apk &> /dev/null; then
             apk add --no-cache jq 2>/dev/null || true
         elif command -v apt-get &> /dev/null; then
@@ -477,11 +477,11 @@ test_jq() {
     fi
     
     if ! command -v jq &> /dev/null; then
-        log_error "jq не доступен. Пропуск."
+ log_error "jq . ."
         return 1
     fi
     
-    # Проверить JSON конфиг файлы если они есть
+ # JSON 
     local files_checked=0
     local json_issues=0
     
@@ -490,14 +490,14 @@ test_jq() {
         if jq empty "$json_file" 2>/dev/null; then
             log_success "$(basename $json_file): OK"
         else
-            log_error "$(basename $json_file): JSON невалиден"
+ log_error "$(basename $json_file): JSON "
             ((json_issues++))
         fi
         ((TOTAL_TESTS++))
     done
     
     if [ $files_checked -eq 0 ]; then
-        log_warning "JSON файлы не найдены"
+ log_warning "JSON "
     else
         if [ $json_issues -eq 0 ]; then
             ((TESTS_PASSED += files_checked))
@@ -508,15 +508,15 @@ test_jq() {
 }
 
 # ============================================================================
-# Генерирование отчетов
+# 
 # ============================================================================
 
 generate_reports() {
-    log_section "ГЕНЕРИРОВАНИЕ ОТЧЕТОВ"
+ log_section " "
     
     mkdir -p "$RESULTS_DIR"
     
-    # JSON отчет
+ # JSON 
     {
         echo "{"
         echo "  \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\","
@@ -535,38 +535,38 @@ generate_reports() {
         echo "}"
     } > "$JSON_REPORT"
     
-    log_success "JSON отчет: $(basename $JSON_REPORT)"
+ log_success "JSON : $(basename $JSON_REPORT)"
     
-    # Markdown отчет
+ # Markdown 
     {
         echo "# 🧪 TESTING FRAMEWORK REPORT"
         echo ""
-        echo "**Дата**: $(date)"
+ echo "****: $(date)"
         echo ""
-        echo "## 📊 Статистика"
+ echo "## 📊 "
         echo ""
-        echo "| Метрика | Значение |"
+ echo "| | |"
         echo "|---------|----------|"
-        echo "| Всего тестов | $TOTAL_TESTS |"
-        echo "| Пройдено | $TESTS_PASSED ✓ |"
-        echo "| Не пройдено | $TESTS_FAILED ✗ |"
+ echo "| | $TOTAL_TESTS |"
+ echo "| | $TESTS_PASSED ✓ |"
+ echo "| | $TESTS_FAILED ✗ |"
         echo "| Success Rate | $(echo "scale=1; $TESTS_PASSED * 100 / $TOTAL_TESTS" | bc 2>/dev/null || echo 'N/A')% |"
         echo ""
-        echo "## 🔧 Использованные инструменты"
+ echo "## 🔧 "
         echo ""
-        echo "- ✅ ShellCheck - Статический анализ Shell скриптов"
-        echo "- ✅ YAMLLINT - Валидация YAML конфигов"
+ echo "- ✅ ShellCheck - Shell "
+ echo "- ✅ YAMLLINT - YAML "
         echo "- ✅ BATS - Bash Automated Testing System"
-        echo "- ✅ Pytest - Python тестирование"
-        echo "- ✅ JQ - JSON валидация"
+ echo "- ✅ Pytest - Python "
+ echo "- ✅ JQ - JSON "
         echo ""
-        echo "## 📁 Результаты"
+ echo "## 📁 "
         echo ""
-        echo "Детальные результаты находятся в: \`$RESULTS_DIR\`"
+ echo " : \`$RESULTS_DIR\`"
         echo ""
     } > "$MD_REPORT"
     
-    log_success "Markdown отчет: $(basename $MD_REPORT)"
+ log_success "Markdown : $(basename $MD_REPORT)"
 }
 
 # ============================================================================
@@ -579,13 +579,13 @@ main() {
     echo "╔════════════════════════════════════════════════════════════╗"
     echo "║   COMPREHENSIVE TESTING FRAMEWORK v1.0                    ║"
     echo "║                                                            ║"
-    echo "║  Использует: ShellCheck, BATS, Pytest, JQ, YAMLLint      ║"
+ echo "║ : ShellCheck, BATS, Pytest, JQ, YAMLLint ║"
     echo "╚════════════════════════════════════════════════════════════╝"
     echo ""
     
     cd "$(dirname "$0")/.." || exit 1
     
-    # Запустить все тесты
+ # 
     test_shellcheck || true
     test_yamllint || true
     test_bats || true
@@ -594,27 +594,27 @@ main() {
     
     generate_reports
     
-    # Итоги
+ # 
     echo ""
     echo "╔════════════════════════════════════════════════════════════╗"
-    echo "║                   ТЕСТИРОВАНИЕ ЗАВЕРШЕНО                   ║"
+ echo "║ TESTING ║"
     echo "╚════════════════════════════════════════════════════════════╝"
     echo ""
-    echo "📊 Итоги:"
-    echo "   Всего тестов: $TOTAL_TESTS"
-    echo "   Пройдено: ${GREEN}$TESTS_PASSED${NC}"
-    echo "   Не пройдено: ${RED}$TESTS_FAILED${NC}"
+ echo "📊 :"
+ echo " : $TOTAL_TESTS"
+ echo " : ${GREEN}$TESTS_PASSED${NC}"
+ echo " : ${RED}$TESTS_FAILED${NC}"
     echo ""
-    echo "📁 Отчеты:"
+ echo "📁 :"
     echo "   JSON: $(basename $JSON_REPORT)"
     echo "   Markdown: $(basename $MD_REPORT)"
     echo ""
     
     if [ $TESTS_FAILED -eq 0 ]; then
-        echo -e "${GREEN}✓ ВСЕ ТЕСТЫ ПРОЙДЕНЫ!${NC}"
+ echo -e "${GREEN}✓ !${NC}"
         exit 0
     else
-        echo -e "${RED}✗ Некоторые тесты не прошли${NC}"
+ echo -e "${RED}✗ ${NC}"
         exit 1
     fi
 }

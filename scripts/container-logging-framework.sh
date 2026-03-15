@@ -1,14 +1,14 @@
 #!/bin/bash
 #
 # 📦 COMPREHENSIVE CONTAINER LOGGING FRAMEWORK
-# Полный фреймворк логирования для всех контейнеров с анализом
+# 
 #
-# Использование: ./container-logging-framework.sh
+# : ./container-logging-framework.sh
 
 set -euo pipefail
 
 # ============================================================================
-# ЗАВИСИМОСТИ И КОНФИГУРАЦИЯ
+# CONFIGURATION
 # ============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -18,7 +18,7 @@ REPORT_FILE="${LOG_DIR}/container_report_${TIMESTAMP}.json"
 HUMAN_REPORT="${LOG_DIR}/container_issues_${TIMESTAMP}.md"
 STDOUT_LOG="${LOG_DIR}/all_container_stdout_${TIMESTAMP}.log"
 
-# Цвета
+# 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -26,14 +26,14 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-# JSON для хранения результатов
+# JSON 
 declare -a SERVICES
 declare -a CONTAINERS
 declare -a ISSUES
 declare -a FIXES
 
 # ============================================================================
-# ФУНКЦИИ ЛОГИРОВАНИЯ
+# FUNCTIONS 
 # ============================================================================
 
 log_info() {
@@ -89,105 +89,105 @@ add_issue() {
 }
 
 # ============================================================================
-# ПРОВЕРКА DOCKER COMPOSE
+# VERIFICATION DOCKER COMPOSE
 # ============================================================================
 
 check_docker_compose() {
-    log_section "ПРОВЕРКА DOCKER COMPOSE КОНФИГУРАЦИИ"
+ log_section "VERIFICATION DOCKER COMPOSE "
     
     if [ ! -f "docker-compose.yaml" ]; then
-        log_error "docker-compose.yaml не найден"
+ log_error "docker-compose.yaml "
         return 1
     fi
     
-    log_success "docker-compose.yaml найден"
+ log_success "docker-compose.yaml "
     
-    # Проверить синтаксис
+ # 
     if docker-compose config &>/dev/null; then
-        log_success "docker-compose.yaml синтаксис OK"
+ log_success "docker-compose.yaml OK"
     else
-        log_error "docker-compose.yaml имеет синтаксические ошибки"
+ log_error "docker-compose.yaml "
         docker-compose config 2>&1 | head -20
         add_issue "docker-compose" "general" "high" \
-            "Синтаксическая ошибка в docker-compose.yaml" \
+ " docker-compose.yaml" \
             "docker-compose.yaml" \
-            "Проверить YAML синтаксис и исправить ошибки"
+ " YAML "
     fi
     
-    # Получить список сервисов
+ # 
     mapfile -t SERVICES < <(docker-compose config --services)
-    log_info "Найдено сервисов: ${#SERVICES[@]}"
+ log_info "Found : ${#SERVICES[@]}"
     for service in "${SERVICES[@]}"; do
         log_info "  • $service"
     done
 }
 
 # ============================================================================
-# ЗАПУСК И ЛОГИРОВАНИЕ КОНТЕЙНЕРОВ
+# LOGGING 
 # ============================================================================
 
 start_docker_compose() {
-    log_section "ЗАПУСК DOCKER COMPOSE СТЕКА"
+ log_section " DOCKER COMPOSE "
     
-    log_info "Запуск docker-compose..."
+    log_info "Starting docker-compose..."
     
     if docker-compose up -d 2>&1 | tee -a "$STDOUT_LOG"; then
-        log_success "docker-compose успешно запущен"
+ log_success "docker-compose "
         
-        # Дать контейнерам время на инициализацию
-        log_info "Ожидание инициализации контейнеров (10 сек)..."
+ # 
+ log_info "Waiting (10 )..."
         sleep 10
         
-        # Получить список запущенных контейнеров
+ # 
         mapfile -t CONTAINERS < <(docker-compose ps -q)
-        log_success "Контейнеры запущены: ${#CONTAINERS[@]}"
+ log_success " : ${#CONTAINERS[@]}"
     else
-        log_error "Ошибка при запуске docker-compose"
+ log_error "Error docker-compose"
         return 1
     fi
 }
 
 # ============================================================================
-# СБОР ЛОГОВ ИЗ КОНТЕЙНЕРОВ
+# 
 # ============================================================================
 
 collect_container_logs() {
-    log_section "СБОР ЛОГОВ ИЗ ВСЕХ КОНТЕЙНЕРОВ"
+ log_section " "
     
     for service in "${SERVICES[@]}"; do
-        log_info "Сбор логов для: $service"
+ log_info " : $service"
         
         local container_log="${LOG_DIR}/${service}_full_${TIMESTAMP}.log"
         
-        # Собрать все логи контейнера
+ # 
         if docker-compose logs "$service" > "$container_log" 2>&1; then
             local log_size=$(du -h "$container_log" | awk '{print $1}')
-            log_success "Логи $service сохранены ($log_size)"
+ log_success " $service ($log_size)"
             
-            # Также добавить в общий stdout лог
+ # stdout 
             echo "" >> "$STDOUT_LOG"
             echo "=== CONTAINER: $service ===" >> "$STDOUT_LOG"
             cat "$container_log" >> "$STDOUT_LOG"
             
         else
-            log_error "Ошибка при сборе логов $service"
+ log_error "Error $service"
             add_issue "$service" "$service" "high" \
-                "Не удалось собрать логи контейнера" \
+ "Failed to " \
                 "docker-compose logs $service" \
-                "Проверить что контейнер запущен и в него доступно логирование"
+ " "
         fi
     done
 }
 
 # ============================================================================
-# АНАЛИЗ ЛОГОВ КОНТЕЙНЕРОВ
+# 
 # ============================================================================
 
 analyze_container_logs() {
-    log_section "АНАЛИЗ ЛОГОВ КОНТЕЙНЕРОВ НА ОШИБКИ"
+ log_section " "
     
     for service in "${SERVICES[@]}"; do
-        log_info "Анализ логов: $service"
+ log_info " : $service"
         
         local container_log="${LOG_DIR}/${service}_full_${TIMESTAMP}.log"
         
@@ -195,98 +195,98 @@ analyze_container_logs() {
             continue
         fi
         
-        # Проверить на различные типы ошибок
+ # 
         
         # 1. ERROR messages
         if grep -qi "error\|failed\|exception" "$container_log"; then
             local error_count=$(grep -ci "error\|failed\|exception" "$container_log")
-            log_error "$service: Найдено $error_count ошибок"
+ log_error "$service: Found $error_count "
             
             echo "" >> "$STDOUT_LOG"
             echo "=== ERRORS in $service ===" >> "$STDOUT_LOG"
             grep -i "error\|failed\|exception" "$container_log" | head -10 >> "$STDOUT_LOG"
             
             add_issue "$service" "$service" "high" \
-                "Обнаружены ошибки в логах: $error_count" \
-                "Логи: $(tail -1 < <(grep -in 'error\|failed' "$container_log" | tail -1 | cut -d: -f1))" \
-                "Проверить логи: docker-compose logs $service"
+ " : $error_count" \
+ ": $(tail -1 < <(grep -in 'error\|failed' "$container_log" | tail -1 | cut -d: -f1))" \
+ " : docker-compose logs $service"
         fi
         
         # 2. WARNING messages
         if grep -qi "warning\|warn" "$container_log"; then
             local warn_count=$(grep -ci "warning\|warn" "$container_log")
-            log_warning "$service: Найдено $warn_count предупреждений"
+ log_warning "$service: Found $warn_count "
         fi
         
         # 3. OOM/Memory errors
         if grep -qi "out of memory\|cannot allocate" "$container_log"; then
-            log_error "$service: Ошибка памяти!"
+ log_error "$service: Error !"
             add_issue "$service" "$service" "critical" \
-                "Контейнер столкнулся с нехваткой памяти" \
-                "Все логи контейнера" \
-                "Увеличить лимит памяти в docker-compose.yaml (mem_limit)"
+ " " \
+ " " \
+ " docker-compose.yaml (mem_limit)"
         fi
         
         # 4. Connection errors
         if grep -qi "connection refused\|connection reset\|no such host" "$container_log"; then
-            log_error "$service: Ошибки соединения"
+ log_error "$service: "
             add_issue "$service" "$service" "high" \
-                "Ошибки соединения между контейнерами" \
-                "Сетевая конфигурация docker-compose" \
-                "Проверить сетевые зависимости и порты в docker-compose.yaml"
+ " " \
+ " docker-compose" \
+ " docker-compose.yaml"
         fi
         
         # 5. Port already in use
         if grep -qi "address already in use\|port.*bound" "$container_log"; then
-            log_error "$service: Порт уже используется"
+ log_error "$service: "
             add_issue "$service" "$service" "high" \
-                "Порт уже в использовании" \
-                "Конфигурация портов в docker-compose.yaml" \
-                "Проверить ports: секцию, убедиться что ports не повторяются"
+ " " \
+ " docker-compose.yaml" \
+ " ports: , ports "
         fi
         
         # 6. Startup failures
         if grep -qi "failed to start\|could not start\|startup.*failed" "$container_log"; then
-            log_error "$service: Ошибка при запуске"
+ log_error "$service: Error "
             add_issue "$service" "$service" "critical" \
-                "Контейнер не смог стартовать" \
-                "Инициализация сервиса" \
-                "Проверить environment variables, volumes и зависимости"
+ " " \
+ " " \
+ " environment variables, volumes "
         fi
         
         # 7. Build issues
         if grep -qi "build failed\|compilation failed\|exit code" "$container_log"; then
-            log_error "$service: Ошибки при сборке"
+ log_error "$service: "
             add_issue "$service" "$service" "critical" \
-                "Ошибки при сборке контейнера" \
-                "Dockerfile или build процесс" \
-                "Пересобрать образ: docker-compose build --no-cache $service"
+ " " \
+ "Dockerfile build " \
+ " : docker-compose build --no-cache $service"
         fi
     done
 }
 
 # ============================================================================
-# ПРОВЕРКА HEALTHCHECKS
+# VERIFICATION HEALTHCHECKS
 # ============================================================================
 
 check_container_health() {
-    log_section "ПРОВЕРКА ЗДОРОВЬЯ КОНТЕЙНЕРОВ"
+ log_section "VERIFICATION "
     
     for service in "${SERVICES[@]}"; do
-        log_info "Проверка здоровья: $service"
+ log_info "Checking : $service"
         
         local container_id=$(docker-compose ps -q "$service")
         
         if [ -z "$container_id" ]; then
-            log_error "$service: Контейнер не запущен"
+ log_error "$service: "
             add_issue "$service" "$service" "critical" \
-                "Контейнер не запущен" \
+ " " \
                 "docker-compose ps" \
-                "Запустить: docker-compose up -d $service"
+ ": docker-compose up -d $service"
             continue
         fi
         
-        # Проверить health status
+ # health status
         local health=$(docker inspect --format='{{.State.Health.Status}}' "$container_id" 2>/dev/null || echo "N/A")
         
         if [ "$health" = "healthy" ]; then
@@ -294,34 +294,34 @@ check_container_health() {
         elif [ "$health" = "unhealthy" ]; then
             log_error "$service: Unhealthy ✗"
             
-            # Получить детали
+ # 
             docker inspect --format='{{json .State.Health}}' "$container_id" | tee -a "$STDOUT_LOG"
             
             add_issue "$service" "$service" "critical" \
-                "Контейнер unhealthy (healthcheck failed)" \
-                "Healthcheck конфигурация docker-compose.yaml" \
-                "Проверить healthcheck условия и логи контейнера"
+ " unhealthy (healthcheck failed)" \
+ "Healthcheck docker-compose.yaml" \
+ " healthcheck "
         else
             log_warning "$service: Health status: $health"
         fi
         
-        # Получить статус контейнера
+ # 
         local status=$(docker-compose ps "$service" | tail -1 | awk '{print $(NF-1)}')
-        log_info "  Статус: $status"
+ log_info " : $status"
     done
 }
 
 # ============================================================================
-# ПРОВЕРКА РЕСУРСОВ
+# VERIFICATION 
 # ============================================================================
 
 check_resource_usage() {
-    log_section "ПРОВЕРКА ИСПОЛЬЗОВАНИЯ РЕСУРСОВ"
+ log_section "VERIFICATION "
     
-    log_info "Использование памяти:"
+ log_info " :"
     docker stats --no-stream --format "table {{.Container}}\t{{.MemUsage}}\t{{.CPUPerc}}" 2>/dev/null | tee -a "$STDOUT_LOG"
     
-    # Проверить на проблемы с ресурсами
+ # 
     for service in "${SERVICES[@]}"; do
         local container_id=$(docker-compose ps -q "$service")
         
@@ -329,7 +329,7 @@ check_resource_usage() {
             continue
         fi
         
-        # Получить использование памяти
+ # 
         local mem_usage=$(docker stats --no-stream --format "{{.MemUsage}}" "$container_id" 2>/dev/null | cut -d'/' -f1)
         
         if [ ! -z "$mem_usage" ]; then
@@ -339,11 +339,11 @@ check_resource_usage() {
 }
 
 # ============================================================================
-# ГЕНЕРИРОВАНИЕ JSON ОТЧЕТА
+# JSON 
 # ============================================================================
 
 generate_json_report() {
-    log_section "ГЕНЕРИРОВАНИЕ JSON ОТЧЕТА"
+ log_section " JSON "
     
     {
         echo "{"
@@ -371,49 +371,49 @@ generate_json_report() {
         echo "}"
     } > "$REPORT_FILE"
     
-    log_success "JSON отчет: $(basename $REPORT_FILE)"
+ log_success "JSON : $(basename $REPORT_FILE)"
 }
 
 # ============================================================================
-# ГЕНЕРИРОВАНИЕ HUMAN-READABLE ОТЧЕТА
+# HUMAN-READABLE 
 # ============================================================================
 
 generate_human_report() {
-    log_section "ГЕНЕРИРОВАНИЕ READABLE ОТЧЕТА"
+ log_section " READABLE "
     
     cat > "$HUMAN_REPORT" << 'REPORT_EOF'
 # 📊 CONTAINER LOGGING & ANALYSIS REPORT
 
-**Дата анализа**: $(date)
-**Версия**: 1.0
+** **: $(date)
+****: 1.0
 
 ---
 
-## 📋 ОГЛАВЛЕНИЕ
+## 📋 
 
-1. [Обзор и статистика](#обзор)
-2. [Критические проблемы](#критические)
-3. [Высокие приоритеты](#высокие)
-4. [Рекомендации](#рекомендации)
+1. [ ](#)
+2. [ ](#)
+3. [ ](#)
+4. [](#)
 
 ---
 
-## 📌 Обзор {#обзор}
+## 📌 {#}
 
-| Метрика | Значение |
+| | |
 |---------|----------|
-| Всего сервисов | ${#SERVICES[@]} |
-| Найдено проблем | ${#ISSUES[@]} |
-| Критических | $(grep -c '"severity": "critical"' <<< "$(printf '%s\n' "${ISSUES[@]}")" || echo 0) |
-| Высоких | $(grep -c '"severity": "high"' <<< "$(printf '%s\n' "${ISSUES[@]}")" || echo 0) |
+| | ${#SERVICES[@]} |
+| Found | ${#ISSUES[@]} |
+| | $(grep -c '"severity": "critical"' <<< "$(printf '%s\n' "${ISSUES[@]}")" || echo 0) |
+| | $(grep -c '"severity": "high"' <<< "$(printf '%s\n' "${ISSUES[@]}")" || echo 0) |
 
 ---
 
-## 🔴 Критические проблемы {#критические}
+## 🔴 {#}
 
 REPORT_EOF
 
-    # Добавить критические проблемы
+ # 
     for issue in "${ISSUES[@]}"; do
         if echo "$issue" | grep -q '"severity": "critical"'; then
             local service=$(echo "$issue" | grep -o '"service": "[^"]*' | cut -d'"' -f4)
@@ -425,8 +425,8 @@ REPORT_EOF
 
 ### ❌ $service: $description
 
-**Место**: $location  
-**Решение**: $fix
+****: $location 
+****: $fix
 
 ---
 
@@ -436,11 +436,11 @@ EOF
     
     cat >> "$HUMAN_REPORT" << 'REPORT_EOF'
 
-## 🟡 Высокие приоритеты {#высокие}
+## 🟡 {#}
 
 REPORT_EOF
 
-    # Добавить high приоритеты
+ # high 
     for issue in "${ISSUES[@]}"; do
         if echo "$issue" | grep -q '"severity": "high"'; then
             local service=$(echo "$issue" | grep -o '"service": "[^"]*' | cut -d'"' -f4)
@@ -452,8 +452,8 @@ REPORT_EOF
 
 ### ⚠️  $service: $description
 
-**Место**: $location  
-**Решение**: $fix
+****: $location 
+****: $fix
 
 ---
 
@@ -461,20 +461,20 @@ EOF
         fi
     done
     
-    log_success "Readable отчет: $(basename $HUMAN_REPORT)"
+ log_success "Readable : $(basename $HUMAN_REPORT)"
 }
 
 # ============================================================================
-# ОСТАНОВКА И ОЧИСТКА
+# CLEANUP
 # ============================================================================
 
 cleanup() {
-    log_section "ОСТАНОВКА И ОЧИСТКА"
+ log_section " CLEANUP"
     
-    log_info "Остановка docker-compose..."
+    log_info "Stopping docker-compose..."
     docker-compose down 2>&1 | tee -a "$STDOUT_LOG" || true
     
-    log_success "Очистка завершена"
+ log_success " "
 }
 
 # ============================================================================
@@ -485,7 +485,7 @@ main() {
     echo "╔════════════════════════════════════════════════════════════╗"
     echo "║      COMPREHENSIVE CONTAINER LOGGING FRAMEWORK v1.0        ║"
     echo "║                                                            ║"
-    echo "║  Универсальное логирование для всех Docker контейнеров   ║"
+ echo "║ Docker ║"
     echo "╚════════════════════════════════════════════════════════════╝"
     echo ""
     
@@ -493,7 +493,7 @@ main() {
     
     cd "$(dirname "$0")/.." || exit 1
     
-    # Запустить все этапы
+ # 
     check_docker_compose || exit 1
     start_docker_compose || exit 1
     collect_container_logs
@@ -504,20 +504,20 @@ main() {
     generate_human_report
     cleanup
     
-    # Итоги
+ # 
     echo ""
     echo "╔════════════════════════════════════════════════════════════╗"
-    echo "║                  АНАЛИЗ ЗАВЕРШЕН                           ║"
+ echo "║ ║"
     echo "╚════════════════════════════════════════════════════════════╝"
     echo ""
-    echo "📁 Результаты:"
+ echo "📁 :"
     echo "   JSON: $(basename $REPORT_FILE)"
     echo "   Readable: $(basename $HUMAN_REPORT)"
     echo "   All logs: $(basename $STDOUT_LOG)"
     echo ""
-    echo "📊 Статистика:"
-    echo "   Проблем найдено: ${#ISSUES[@]}"
-    echo "   Сервисов проанализировано: ${#SERVICES[@]}"
+ echo "📊 :"
+ echo " : ${#ISSUES[@]}"
+ echo " : ${#SERVICES[@]}"
     echo ""
 }
 
