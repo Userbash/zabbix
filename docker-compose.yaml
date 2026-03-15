@@ -1,3 +1,25 @@
+# ==============================================================================
+# Zabbix Docker Compose Configuration
+# ==============================================================================
+# This file defines all services for the Zabbix monitoring stack.
+#
+# SECURITY NOTES:
+# - All sensitive credentials are stored in Docker Secrets (defined below)
+# - Environment files (.env_*) contain non-sensitive configuration
+# - Secret files (.POSTGRES_*, .GF_*) must be created via init-secrets.sh
+# - Never commit actual passwords to version control!
+#
+# USAGE:
+# 1. Copy environment templates: cp .env_*.example .env_*
+# 2. Setup secrets: cp .POSTGRES_*.example .POSTGRES_* (or use init-secrets.sh)
+# 3. Start services: docker compose up -d
+# 4. View logs: docker compose logs -f
+#
+# FOR PODMAN:
+# Replace "docker compose" with "podman-compose" in all commands
+#
+# ==============================================================================
+
 services:
   zabbix-server-pgsql:
     build:
