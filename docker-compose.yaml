@@ -78,6 +78,12 @@ services:
       - net.ipv4.conf.all.accept_redirects=0
       - net.ipv4.conf.all.secure_redirects=0
       - net.ipv4.conf.all.send_redirects=0
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '5'
+        labels: 'service=zabbix-server-pgsql'
     labels:
       com.zabbix.description: "Zabbix server with PostgreSQL database support"
       com.zabbix.company: "Zabbix LLC"
@@ -132,6 +138,12 @@ services:
     stop_grace_period: 10s
     sysctls:
       - net.core.somaxconn=65535
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '5'
+        labels: 'service=zabbix-web-nginx-pgsql'
     labels:
       com.zabbix.description: "Zabbix frontend on Nginx web-server with PostgreSQL database support"
       com.zabbix.company: "Zabbix LLC"
@@ -166,6 +178,18 @@ services:
           - zabbix-agent
           - zabbix-agent-passive
           - zabbix-agent-alpine
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "10050"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: '5m'
+        max-file: '3'
+        labels: 'service=zabbix-agent'
     stop_grace_period: 5s
     labels:
       com.zabbix.description: "Zabbix agent"
@@ -197,6 +221,18 @@ services:
         aliases:
           - zabbix-agent2
           - zabbix-agent2-alpine
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "10050"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: '5m'
+        max-file: '3'
+        labels: 'service=zabbix-agent2'
     stop_grace_period: 5s
     labels:
       com.zabbix.description: "Zabbix agent 2"
@@ -222,6 +258,18 @@ services:
         aliases:
           - zabbix-java-gateway
           - zabbix-java-gateway-alpine
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "10052"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: '5m'
+        max-file: '3'
+        labels: 'service=zabbix-java-gateway'
     stop_grace_period: 5s
     labels:
       com.zabbix.description: "Zabbix Java Gateway"
@@ -249,6 +297,18 @@ services:
         aliases:
           - zabbix-snmptraps
       zbx_net_backend:
+    healthcheck:
+      test: ["CMD", "test", "-S", "/var/run/zabbix/zabbix_snmptraps.sock"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: '5m'
+        max-file: '3'
+        labels: 'service=zabbix-snmptraps'
     stop_grace_period: 5s
     labels:
       com.zabbix.description: "Zabbix snmptraps"
@@ -291,7 +351,13 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
- 
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+        labels: 'service=grafana'
+
   postgres:
     image: postgres:16-alpine
     container_name: postgres
@@ -317,6 +383,12 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '5'
+        labels: 'service=postgres'
     stop_grace_period: 1m
     networks:
       zbx_net_backend:
