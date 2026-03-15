@@ -39,6 +39,9 @@ RUN set -eux; \
     grafana-cli --pluginsDir "/var/lib/grafana/plugins" plugins install alexanderzobnin-zabbix-app && \
     grafana-cli --pluginsDir "/var/lib/grafana/plugins" plugins update alexanderzobnin-zabbix-app
 
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:3000/api/health || exit 1
+
 EXPOSE 3000
 
 COPY ./run.sh /run.sh

@@ -129,6 +129,9 @@ RUN set -eux; \
     chgrp -R 0 /usr/share/zabbix/include/defines.inc.php && \
     chmod -R g=u /usr/share/zabbix/include/defines.inc.php
 
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8080/ || exit 1
+
 EXPOSE 8080/TCP 8443/TCP
 
 WORKDIR /usr/share/zabbix

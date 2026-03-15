@@ -87,6 +87,9 @@ RUN set -eux; \
     chgrp -R 0 /etc/zabbix/ /usr/sbin/zabbix_java/ && \
     chmod -R g=u /etc/zabbix/ /usr/sbin/zabbix_java/
 
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD /usr/sbin/zabbix_java_gateway -V || exit 1
+
 EXPOSE 10052/TCP
 
 WORKDIR /var/lib/zabbix

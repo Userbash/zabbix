@@ -65,6 +65,9 @@ RUN set -eux; \
     chgrp -R 0 /etc/zabbix/ /var/lib/zabbix/ && \
     chmod -R g=u /etc/zabbix/ /var/lib/zabbix/
 
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD test -f /var/run/supervisord.pid || exit 1
+
 EXPOSE 1162/UDP
 
 WORKDIR /var/lib/zabbix
