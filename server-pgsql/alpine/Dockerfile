@@ -18,13 +18,18 @@ RUN set -eux; \
             automake \
             coreutils \
             curl-dev \
+            krb5-dev \
             libevent-dev \
+            libpq-dev \
             libssh2-dev \
+            libtirpc-dev \
             libxml2-dev \
+            musl-dev \
             net-snmp-dev \
             openipmi-dev \
             openldap-dev \
-            pcre-dev \
+            openssl-dev \
+            pcre2-dev \
             postgresql-dev \
             git \
             g++ \
@@ -57,9 +62,13 @@ RUN set -eux; \
             --with-unixodbc \
             --enable-ipv6 \
             --silent && \
-    make -j"$(nproc)" -s dbschema && \
-    make -j"$(nproc)" -s && \
-    make -j"$(nproc)" -s install && \
+    echo "=== Building dbschema ===" && \
+    make -j"$(nproc)" dbschema || (echo "=== Retrying dbschema with single job ===" && make -j1 dbschema) && \
+    echo "=== Building main ===" && \
+    make -j"$(nproc)" || (echo "=== Retrying main with single job ===" && make -j1) && \
+    echo "=== Installing ===" && \
+    make -j"$(nproc)" install && \
+    echo "=== Building documentation ===" && \
     mkdir -p /usr/share/doc/zabbix-server-postgresql/ && \
     gzip -c database/postgresql/schema.sql > /usr/share/doc/zabbix-server-postgresql/create.sql.gz && \
     cat database/postgresql/images.sql database/postgresql/data.sql | gzip -c >> /usr/share/doc/zabbix-server-postgresql/create.sql.gz && \
@@ -78,6 +87,27 @@ LABEL org.opencontainers.image.title="Zabbix server (PostgreSQL)" \
       org.opencontainers.image.licenses="GPL v2.0"
 
 STOPSIGNAL SIGTERM
+
+# Install runtime dependencies
+RUN set -eux; \
+    apk add --no-cache \
+            ca-certificates \
+            krb5-libs \
+            libevent \
+            libldap \
+            libsasl \
+            libssh2 \
+            libxml2 \
+            net-snmp-libs \
+            openipmi-libs \
+            openssl \
+            postgresql-client \
+            postgresql-libs \
+            unixodbc-libs
+
+# Add healthcheck
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD /usr/sbin/zabbix_server -V || exit 1
 
 RUN set -eux; \
     addgroup -S -g 1995 zabbix && \
