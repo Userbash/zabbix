@@ -1,5 +1,5 @@
 # Compilation stage
-FROM alpine:3.19 as builder
+FROM alpine:3.20 as builder
 
 SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 
@@ -26,7 +26,7 @@ RUN set -eux; \
     make
 
 # Final stage
-FROM alpine:3.19
+FROM alpine:3.20
 
 SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 

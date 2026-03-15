@@ -3,8 +3,16 @@ services:
     build:
       context: ./server-pgsql/alpine
       cache_from:
-        - alpine:3.12
+        - alpine:3.20
     image: zabbix-server-pgsql:alpine-local
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
     ports:
       - "10051:10051"
     volumes:
@@ -59,8 +67,16 @@ services:
     build:
       context: ./web-nginx-pgsql/alpine
       cache_from:
-        - alpine:3.12
+        - alpine:3.20
     image: zabbix-web-nginx-pgsql:alpine-local
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
     ports:
       - "80:8080"
       - "443:8443"
@@ -106,8 +122,13 @@ services:
     build:
       context: ./agent/alpine
       cache_from:
-        - alpine:3.12
+        - alpine:3.20
     image: zabbix-agent:alpine-local
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 128M
     ports:
       - "10050:10050"
     volumes:
@@ -134,8 +155,13 @@ services:
     build:
       context: ./agent2/alpine
       cache_from:
-        - alpine:3.12
+        - alpine:3.20
     image: zabbix-agent2:alpine-local
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 256M
     ports:
       - "10049:10050"
       - "31999:31999"
@@ -160,8 +186,13 @@ services:
     build:
       context: ./java-gateway/alpine
       cache_from:
-        - alpine:3.12
+        - alpine:3.20
     image: zabbix-java-gateway:alpine-local
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 512M
     ports:
       - "10052:10052"
     networks:
@@ -180,8 +211,13 @@ services:
     build:
       context: ./snmptraps/alpine
       cache_from:
-        - alpine:3.12
+        - alpine:3.20
     image: zabbix-snmptraps:alpine-local
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 128M
     ports:
       - "162:1162/udp"
     volumes:
@@ -203,6 +239,14 @@ services:
     container_name: grafana
     hostname: grafana
     restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
     volumes:
       - ./zbx_env/etc/grafana:/etc/grafana:rw,z
       - ./zbx_env/etc/grafana/provisioning:/etc/grafana/provisioning:rw,z
@@ -227,10 +271,18 @@ services:
       start_period: 30s
  
   postgres:
-    build: ./postgres
+    image: postgres:16-alpine
     container_name: postgres
     hostname: postgres
     restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
     volumes:
       - ./zbx_env/var/lib/postgresql/data:/var/lib/postgresql/data:rw,z
     env_file:

@@ -1,0 +1,8 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^git config user\\.email && git config user\\.name$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

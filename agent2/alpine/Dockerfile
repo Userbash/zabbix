@@ -1,10 +1,10 @@
 # Compilation stage
-FROM alpine:3.18 as builder
+FROM alpine:3.20 as builder
 
 SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 
-ARG MAJOR_VERSION=5.0
-ARG ZBX_VERSION=${MAJOR_VERSION}.4
+ARG MAJOR_VERSION=7.0
+ARG ZBX_VERSION=${MAJOR_VERSION}.0
 ARG ZBX_SOURCES=https://git.zabbix.com/scm/zbx/zabbix.git
 
 ENV ZBX_VERSION=${ZBX_VERSION} ZBX_SOURCES=${ZBX_SOURCES}
@@ -47,7 +47,7 @@ RUN set -eux; \
     make -j"$(nproc)" -s install
 
 # Final stage
-FROM alpine:3.19
+FROM alpine:3.20
 
 SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 
@@ -81,8 +81,8 @@ RUN set -eux; \
             iputils && \
     rm -rf /var/cache/apk/*
 
-ARG MAJOR_VERSION=5.0
-ARG ZBX_VERSION=${MAJOR_VERSION}.4
+ARG MAJOR_VERSION=7.0
+ARG ZBX_VERSION=${MAJOR_VERSION}.0
 ARG ZBX_SOURCES=https://git.zabbix.com/scm/zbx/zabbix.git
 
 ENV TERM=xterm ZBX_VERSION=${ZBX_VERSION} ZBX_SOURCES=${ZBX_SOURCES}
