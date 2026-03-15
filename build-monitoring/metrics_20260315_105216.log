@@ -1,0 +1,10 @@
+Context Size                   : 40K             
+Total Files                    : 5               files
+Total Directories              : 2               dirs
+.dockerignore Present          : YES             ✓
+Ignore Rules                   : 1               rules
+Largest RUN Command            : 15              characters
+Layer Ordering                 : CHECKING        ...
+Layer Caching                  : OPTIMIZED       ✓
+Build Stages                   : 2               stages
+Base Image                     : alpine:3.20     
