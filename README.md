@@ -96,10 +96,8 @@ Security by default:
 
 ## Screenshots
 
-Add screenshots under `docs/images/` and update this section with links:
-
-- Zabbix dashboard
-- Grafana home
+![Zabbix dashboard](images/zabbix.jpg)
+![Grafana home](images/grafana.jpg)
 
 ---
 
