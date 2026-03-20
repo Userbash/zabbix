@@ -336,6 +336,14 @@ services:
       - ./zbx_env/var/lib/grafana/plugins:/var/lib/grafana/plugins:rw,z
     env_file:
       - .env_grafana
+    environment:
+      GF_DATABASE_USER__FILE: /run/secrets/GF_DATABASE_USER
+      GF_DATABASE_PASSWORD__FILE: /run/secrets/GF_DATABASE_PASSWORD
+      GF_SESSION_PROVIDER_CONFIG__FILE: /run/secrets/GF_SESSION_PROVIDER_CONFIG
+    secrets:
+      - GF_DATABASE_USER
+      - GF_DATABASE_PASSWORD
+      - GF_SESSION_PROVIDER_CONFIG
     ports:
       - "3000:3000"  
     depends_on:
@@ -373,13 +381,20 @@ services:
           memory: 512M
     volumes:
       - ./zbx_env/var/lib/postgresql/data:/var/lib/postgresql/data:rw,z
+      - ./zbx_env/var/lib/postgresql/initdb/01-grafana.sh:/docker-entrypoint-initdb.d/01-grafana.sh:ro,z
     env_file:
       - .env_db_pgsql
+      - .env_grafana
+    environment:
+      GF_DATABASE_USER_FILE: /run/secrets/GF_DATABASE_USER
+      GF_DATABASE_PASSWORD_FILE: /run/secrets/GF_DATABASE_PASSWORD
     secrets:
       - POSTGRES_USER
       - POSTGRES_PASSWORD
+      - GF_DATABASE_USER
+      - GF_DATABASE_PASSWORD
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB && [ \"$$(psql -U $$POSTGRES_USER -d $$POSTGRES_DB -tAc \"SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='hosts';\")\" = '1' ]"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -429,3 +444,9 @@ secrets:
     file: ./.POSTGRES_USER
   POSTGRES_PASSWORD:
     file: ./.POSTGRES_PASSWORD
+  GF_DATABASE_USER:
+    file: ./.GF_DATABASE_USER
+  GF_DATABASE_PASSWORD:
+    file: ./.GF_DATABASE_PASSWORD
+  GF_SESSION_PROVIDER_CONFIG:
+    file: ./.GF_SESSION_PROVIDER_CONFIG

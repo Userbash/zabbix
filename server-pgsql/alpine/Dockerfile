@@ -1,5 +1,5 @@
 # Compilation stage
-FROM alpine:3.20 as builder
+FROM docker.io/library/alpine:3.20 as builder
 
 SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 
@@ -25,10 +25,12 @@ RUN set -eux; \
             libtirpc-dev \
             libxml2-dev \
             musl-dev \
+            linux-headers \
             net-snmp-dev \
             openipmi-dev \
             openldap-dev \
             openssl-dev \
+            pcre-dev \
             pcre2-dev \
             postgresql-dev \
             git \
@@ -72,10 +74,14 @@ RUN set -eux; \
     mkdir -p /usr/share/doc/zabbix-server-postgresql/ && \
     gzip -c database/postgresql/schema.sql > /usr/share/doc/zabbix-server-postgresql/create.sql.gz && \
     cat database/postgresql/images.sql database/postgresql/data.sql | gzip -c >> /usr/share/doc/zabbix-server-postgresql/create.sql.gz && \
-    cp database/postgresql/timescaledb.sql /usr/share/doc/zabbix-server-postgresql/timescaledb.sql
+    if [ -f database/postgresql/timescaledb.sql ]; then \
+        cp database/postgresql/timescaledb.sql /usr/share/doc/zabbix-server-postgresql/timescaledb.sql; \
+    else \
+        : > /usr/share/doc/zabbix-server-postgresql/timescaledb.sql; \
+    fi
 
 # Final stage
-FROM alpine:3.20
+FROM docker.io/library/alpine:3.20
 
 SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 
@@ -103,7 +109,7 @@ RUN set -eux; \
             openssl \
             postgresql-client \
             postgresql-libs \
-            unixodbc-libs
+            unixodbc
 
 # Add healthcheck
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \

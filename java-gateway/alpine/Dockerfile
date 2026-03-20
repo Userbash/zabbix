@@ -1,5 +1,5 @@
 # Compilation stage
-FROM alpine:3.20 as builder
+FROM docker.io/library/alpine:3.20 as builder
 
 SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 
@@ -44,7 +44,7 @@ RUN set -eux; \
     rm -rf /usr/sbin/zabbix_java/lib/*.xml
 
 # Final stage
-FROM alpine:3.20
+FROM docker.io/library/alpine:3.20
 
 SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 

@@ -1,0 +1,16 @@
+title = "Zabbix secrets policy"
+
+[allowlist]
+paths = [
+  "^.env.*\\.example$",
+  "^\\.POSTGRES_.*\\.example$",
+  "^\\.GF_.*\\.example$"
+]
+
+[[rules]]
+id = "generic-password"
+description = "Generic password assignment"
+regex = "(?i)(password|passwd|pwd|secret|token|api_key|apikey)\\s*[:=]\\s*[^\\s]+"
+secretGroup = 0
+entropy = 3.0
+keywords = ["password", "secret", "token", "api_key", "apikey"]

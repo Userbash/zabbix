@@ -1,5 +1,5 @@
 # Compilation stage
-FROM alpine:3.20 as builder
+FROM docker.io/library/alpine:3.20 as builder
 
 SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 
@@ -16,6 +16,7 @@ RUN set -eux; \
             autoconf \
             automake \
             curl-dev \
+            linux-headers \
             openssl-dev \
             openldap-dev \
             g++ \
@@ -46,7 +47,7 @@ RUN set -eux; \
     make -j"$(nproc)" -s install
 
 # Final stage
-FROM alpine:3.20
+FROM docker.io/library/alpine:3.20
 
 SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 

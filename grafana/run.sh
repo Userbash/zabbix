@@ -71,6 +71,27 @@ if [ ! -z "${GF_INSTALL_PLUGINS}" ]; then
   done
 fi
 
+# Wait for the Postgres endpoint before starting Grafana to avoid startup errors.
+if [ "${GF_DATABASE_TYPE:-}" = "postgres" ] && [ -n "${GF_DATABASE_HOST:-}" ]; then
+    db_host="${GF_DATABASE_HOST}"
+    db_port="${GF_DATABASE_PORT:-5432}"
+    wait_seconds="${GF_DATABASE_WAIT_TIMEOUT:-60}"
+    start_time="$(date +%s)"
+
+    echo "Waiting for Postgres at ${db_host}:${db_port} (timeout ${wait_seconds}s)..."
+    while true; do
+        if (exec 3<>"/dev/tcp/${db_host}/${db_port}") >/dev/null 2>&1; then
+            exec 3>&-
+            break
+        fi
+        if [ $(( $(date +%s) - start_time )) -ge "${wait_seconds}" ]; then
+            echo "Postgres not reachable after ${wait_seconds}s; starting Grafana anyway." >&2
+            break
+        fi
+        sleep 2
+    done
+fi
+
 exec grafana-server                                         \
   --homepath="$GF_PATHS_HOME"                               \
   --config="$GF_PATHS_CONFIG"                               \

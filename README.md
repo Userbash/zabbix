@@ -1,227 +1,105 @@
-# Zabbix with Podman and Docker Compose
+ # Zabbix Stack (Podman/Docker)
 
-A complete, production-ready Zabbix setup that just works. It handles all the container stuff for you, works on basically any Linux system (macOS and WSL2 too), and doesn't require root privileges to run.
+A production-ready Zabbix + Grafana stack with PostgreSQL, built for rootless Podman or Docker. This repository includes automation scripts, secret handling, and CI secret scans for safe publishing.
 
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE) [![Podman 3.0+](https://img.shields.io/badge/Podman-3.0+-blue.svg)](https://podman.io) [![Docker 20.10+](https://img.shields.io/badge/Docker-20.10+-blue.svg)](https://docker.com)
 
 ---
 
-## Getting Started
-
-If you just want to get it running:
+## Quick Start
 
 ```bash
 bash scripts/install-runtime.sh
 bash scripts/rebuild-from-scratch.sh
-open http://localhost:80
 ```
 
-That's it. The script figures out what OS you're on and installs what you need.
+Open:
+- Zabbix web UI: http://localhost:8080
+- Grafana: http://localhost:3000
 
-If you want to run everything without sudo (which is nicer), do this once:
-
-```bash
-sudo usermod --add-subuids 100000-165535 --add-subgids 100000-165535 $(whoami)
-podman system migrate
-podman-compose up -d
-```
-
-For Flatpak users:
-
-```bash
-bash scripts/install-runtime.sh --flatpak
-./.flatpak-podman-wrapper.sh run alpine echo "ready"
-```
+Default credentials:
+- Zabbix: `Admin` / `zabbix`
+- Grafana: `admin` / `admin` (change on first login)
 
 ---
 
-## What You Get
+## What's Included
 
-The whole monitoring stack:
-- PostgreSQL 16 for data storage
-- Zabbix Server for the actual monitoring
-- Web UI (Nginx + PHP) so you can see what's happening
-- Java Gateway for JMX stuff
+- PostgreSQL 16 for storage
+- Zabbix Server 7.0.0
+- Web UI (Nginx + PHP)
+- Java Gateway (JMX)
 - SNMP Traps receiver
-- Grafana if you want nicer dashboards
+- Grafana 11.5.x
 
-Security stuff is on by default:
-- Containers run as your user, not root
-- Each container gets its own user namespace (no UID conflicts)
-- Services are split into backend (internal only) and frontend (public)
-- Everything gets resource limits
-- Health checks run automatically
-
----
-
-## Installation
-
-The easy way - just run this and let it figure it out:
-
-```bash
-bash scripts/install-runtime.sh
-```
-
-If you prefer doing it manually:
-
-**Fedora/CentOS/RHEL:**
-```bash
-sudo dnf install podman podman-compose
-```
-
-**Ubuntu/Debian:**
-```bash
-sudo apt-get install podman podman-compose
-```
-
-**macOS:**
-```bash
-brew install podman podman-compose
-podman machine init
-podman machine start
-```
-
-**Windows (WSL2):**
-Just use Docker Desktop. Or if you're in WSL2 already, run the install script.
+Security by default:
+- Rootless containers (no root daemon)
+- Split backend/frontend networks
+- Health checks
+- Resource limits
+- Secrets via files (no plaintext in git)
 
 ---
 
-## Running It
+## Ports
 
-Start everything:
-```bash
-podman-compose up -d
-```
-
-Check if it's actually running:
-```bash
-podman-compose ps
-podman logs -f zabbix-server
-```
-
-Then go to http://localhost - the default credentials are admin/zabbix (you should change these).
-
-Stop it when you're done:
-```bash
-podman-compose down
-```
-
-If you want to start completely fresh (warning: removes data):
-```bash
-podman-compose down -v
-bash scripts/rebuild-from-scratch.sh
-```
+- Zabbix web UI: 8080 (HTTP), 8443 (HTTPS)
+- Grafana: 3000
+- Zabbix Server: 10051
+- Java Gateway: 10052
 
 ---
 
-## Common Stuff You'll Need
+## Automation Highlights
 
-```bash
-# See what's running
-podman-compose ps
-
-# Follow logs for a service
-podman-compose logs -f zabbix-server
-
-# Jump into a container
-podman exec <container> /bin/bash
-
-# See how much resources things are using
-podman stats
-
-# Full rebuild from nothing
-bash scripts/rebuild-from-scratch.sh
-
-# Clean up unused stuff
-podman system prune -a --volumes
-```
+- `scripts/podman-automation.sh` and `scripts/test-module/*` for build/run/log collection
+- Automatic runtime directory bootstrap to avoid missing-path errors
+- Grafana DB auto-init and preflight checks
+- Secrets preflight for publishing
+- CI secret scan (gitleaks)
 
 ---
 
-## Security & Rootless Mode
+## Upgrade Notes
 
-By default all containers run as a regular user, not root. Here's why that matters: if someone breaks into a container, they get your user permissions, not root. That's way better.
+### Zabbix 5.0.0 -> 7.0.0 (Project Upgrade)
 
-**Setting up rootless mode (one time):**
+- Updated images and build configs for Zabbix 7.0.x.
+- PHP and web stack aligned with newer Zabbix frontend requirements.
+- Updated health checks and container wiring.
+- Expect updated templates and UI changes from upstream Zabbix.
 
-```bash
-# Configure user namespaces (needs sudo once)
-sudo usermod --add-subuids 100000-165535 --add-subgids 100000-165535 $(whoami)
+### Grafana 9.x -> 11.5.x (Project Upgrade)
 
-# Switch podman to rootless (no sudo needed)
-podman system migrate
-
-# Check it worked
-podman info | grep rootless
-```
-
-Then you can use podman-compose without sudo.
-
-**Why this is good:**
-- If a container gets compromised, the attacker only gets your user
-- Containers are isolated from each other
-- They clean up automatically when you log out
-- No long-running root daemon
-
-**If you skip this:** Just remember to put `sudo` before podman-compose commands. It works fine, just runs as root.
+- Angular-based plugins are disabled by default in Grafana 11.
+- Plugin set updated to avoid unsupported plugins.
+- Secrets are provided via `*_FILE` to avoid plaintext env vars.
 
 ---
 
-## Platform Support
+## Logging and Build Observability
 
-Should work on:
-- Fedora, Ubuntu, Debian, CentOS - obvious winners
-- macOS with Homebrew
-- WSL2 on Windows (Docker Desktop recommended)
-- Flatpak (with a wrapper script if needed)
-
-The install script tries to detect what you're on and installs accordingly.
+- Build and runtime logs are collected into `logs/`.
+- `scripts/test-module/log-collector.sh` exports JSON summaries.
+- Health checks make container status visible immediately.
 
 ---
 
-## Configuring Stuff
+## Publishing and Secrets
 
-Copy the example env file and edit it:
-
-```bash
-cp .env.example .env
-```
-
-Then change whatever you need - passwords, timezone, server name, etc.
-
-Key settings:
-```
-DB_SERVER_PASSWORD=your_db_password
-ZBX_SERVER_NAME=My Monitoring
-TIMEZONE=UTC
-```
+- `.gitignore` excludes local secret files
+- `gitleaks` pre-commit hook and CI scan
+- Optional sops/age encryption
+- See [docs/PUBLISHING.md](docs/PUBLISHING.md)
 
 ---
 
-## When Things Break
+## Screenshots
 
-Podman not installed?
-```bash
-bash scripts/install-runtime.sh
-```
+Add screenshots under `docs/images/` and update this section with links:
 
-Permission errors on volumes?
-```bash
-chmod 777 /path/to/volume
-# or just use named volumes instead
-podman volume create mydata
-```
-
-Container won't start?
-```bash
-podman logs <container>
-podman inspect <container> | grep ExitCode
-```
-
-DNS issues inside containers?
-```bash
-podman run --dns 8.8.8.8 --dns 1.1.1.1 alpine ping 8.8.8.8
-```
+- Zabbix dashboard
+- Grafana home
 
 ---
 
@@ -229,35 +107,30 @@ podman run --dns 8.8.8.8 --dns 1.1.1.1 alpine ping 8.8.8.8
 
 ```
 zabbix/
-├── README.md                    (this file)
-├── docker-compose.yaml          (everything defined here)
-├── LICENSE                      (MIT)
-├── scripts/                     (helper scripts)
-│   ├── install-runtime.sh       (auto setup)
-│   ├── rebuild-from-scratch.sh  (full rebuild)
-│   └── others...
-├── agent/
+├── README.md
+├── docker-compose.yaml
+├── scripts/
 ├── server-pgsql/
 ├── web-nginx-pgsql/
 ├── java-gateway/
 ├── snmptraps/
 ├── grafana/
-└── zbx_env/                     (your data lives here)
+└── zbx_env/
 ```
 
 ---
 
-## Services
+## Troubleshooting
 
-This defines two networks to keep things sane:
+```bash
+podman logs <container>
+podman inspect <container> | grep ExitCode
+```
 
-**Internal (backend):**
-- postgres (database)
-- zabbix-server
-- java-gateway
-- snmp-traps
-
-**Public (frontend):**
+DNS issues inside containers:
+```bash
+podman run --dns 8.8.8.8 --dns 1.1.1.1 alpine ping 8.8.8.8
+```
 - zabbix-web (port 80/443)
 - grafana (port 3000)
 

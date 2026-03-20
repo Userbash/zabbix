@@ -20,3 +20,22 @@ Thumbs.db
 tmp/
 temp/
 .cache/
+
+# Secrets (local)
+.env
+.env.*
+.POSTGRES_USER
+.POSTGRES_PASSWORD
+.GF_DATABASE_USER
+.GF_DATABASE_PASSWORD
+.GF_SESSION_PROVIDER_CONFIG
+
+# Certificates/keys (local)
+*.key
+*.pem
+*.crt
+zbx_env/etc/ssl/
+
+# SOPS/age keys
+age.key
+*.agekey

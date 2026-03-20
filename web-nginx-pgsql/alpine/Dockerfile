@@ -1,5 +1,5 @@
 # Compilation stage
-FROM alpine:3.20 as builder
+FROM docker.io/library/alpine:3.20 as builder
 
 SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 
@@ -31,7 +31,7 @@ RUN set -eux; \
     ./locale/make_mo.sh
 
 # Final stage
-FROM alpine:3.20
+FROM docker.io/library/alpine:3.20
 
 SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 
@@ -103,8 +103,8 @@ COPY conf/etc/php7/php-fpm.conf /etc/php83/php-fpm.conf
 COPY conf/etc/php7/php-fpm.d/zabbix.conf /etc/php83/php-fpm.d/zabbix.conf
 COPY conf/etc/supervisor/supervisord.conf /etc/supervisor/supervisord.conf
 COPY conf/etc/supervisor/conf.d/supervisord_zabbix.conf /etc/supervisor/conf.d/supervisord_zabbix.conf
-COPY conf/etc/zabbix/nginx.conf /etc/nginx/conf.d/zabbix.conf
-COPY conf/etc/zabbix/nginx_ssl.conf /etc/nginx/conf.d/zabbix_ssl.conf
+COPY conf/etc/zabbix/nginx.conf /etc/zabbix/nginx.conf
+COPY conf/etc/zabbix/nginx_ssl.conf /etc/zabbix/nginx_ssl.conf
 COPY conf/etc/zabbix/web/maintenance.inc.php /etc/zabbix/web/maintenance.inc.php
 COPY conf/etc/zabbix/web/zabbix.conf.php /etc/zabbix/web/zabbix.conf.php
 

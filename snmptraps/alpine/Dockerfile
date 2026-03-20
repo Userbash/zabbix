@@ -1,5 +1,5 @@
 # Compilation stage
-FROM alpine:3.20 as builder
+FROM docker.io/library/alpine:3.20 as builder
 
 SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 
@@ -10,9 +10,11 @@ RUN set -eux; \
             autoconf \
             automake \
             coreutils \
+            dpkg-dev \
             git \
             g++ \
             make \
+            patch \
             libnsl-dev \
             net-snmp-dev && \
     cd /tmp/ && \
@@ -26,7 +28,7 @@ RUN set -eux; \
     make
 
 # Final stage
-FROM alpine:3.20
+FROM docker.io/library/alpine:3.20
 
 SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 
